@@ -20,7 +20,7 @@ var guards={};
 guards.role_name="Guard";
 guards.enable=true;
 guards.target_count=2;
-guards.body=[TOUGH, TOUGH, ATTACK, MOVE, MOVE];
+guards.body=[TOUGH,ATTACK, ATTACK, ATTACK, MOVE];
 
 //order is creation priority
 var creep_types=[miners, janators, builders, guards]
