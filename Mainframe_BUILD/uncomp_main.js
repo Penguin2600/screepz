@@ -45,7 +45,6 @@ var do_guard = function (creep) {
     var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
     if(target) {
         if(creep.attack(target) == ERR_NOT_IN_RANGE) {
-            creep.say('Death to infidels!')
             creep.moveTo(target);
         }
     } else {
