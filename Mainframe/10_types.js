@@ -2,7 +2,7 @@ var miners={};
 miners.role_name="Miner";
 miners.enable=true;
 miners.target_count=6;
-miners.body=[WORK, CARRY, MOVE];
+miners.body=[WORK, CARRY, MOVE, MOVE];
 
 var builders={};
 builders.role_name="Builder";
@@ -24,3 +24,5 @@ guards.body=[TOUGH,ATTACK, ATTACK, ATTACK, MOVE];
 
 //order is creation priority
 var creep_types=[miners, janators, builders, guards]
+
+exports.creep_types = creep_types
