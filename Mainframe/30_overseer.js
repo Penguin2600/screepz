@@ -21,20 +21,19 @@ var get_creeps = function() {
         var ctype = creep_types[index];
         creep_counts[ctype.role_name] = 0;
     }
-    for (var creep in Game.creeps) {
-        if (creep_counts[Game.creeps[creep].memory.role]) {
-            creep_counts[Game.creeps[creep].memory.role] += 1;
-        } else {
-            creep_counts[Game.creeps[creep].memory.role] = 1;
-        }
+
+    for (var name in Game.creeps) {
+        var role = Game.creeps[name].memory.role;
+        creep_counts[role] += 1;
     }
+
     return creep_counts
 }
 
 //Manage colony population to config spec
 var overseer = function() {
-
     var creep_counts = get_creeps()
+
     for (var index in creep_types) {
         var ctype = creep_types[index];
         if (ctype.enable) {

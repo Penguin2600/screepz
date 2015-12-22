@@ -1,13 +1,22 @@
+var util = require('05_utilities');
 var behaviors = require('20_behaviors');
 var overseer = require('30_overseer');
 
-module.exports.loop = function () {
+if (!Memory.sleep) {
+    Memory.sleep = Game.time
+}
 
-    overseer.overseer();
+module.exports.loop = function() {
+    if (Game.time - Memory.sleep >= 10) {
+        Memory.sleep = Game.time
 
-    for(var name in Game.creeps) {
-        var creep = Game.creeps[name];
-
-        behaviors.behavior[creep.memory.role](creep)
+        //ALWAYS GC BEFORE SPAWNING OR THE BABIES COME OUT TARDED
+        util.garbage_collect();
+        overseer.overseer();
     }
+
+    for (var key in Game.creeps) {
+        behaviors.behavior[Game.creeps[key].memory.role](Game.creeps[key])
+    }
+
 }

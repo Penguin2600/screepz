@@ -2,19 +2,19 @@ var miners = {};
 miners.role_name = "Miner";
 miners.enable = true;
 miners.target_count = 6;
-miners.body = [WORK, CARRY, MOVE, MOVE];
+miners.body = [WORK, WORK, CARRY, MOVE, MOVE];
 
 var builders = {};
 builders.role_name = "Builder";
 builders.enable = true;
-builders.target_count = 3;
-builders.body = [WORK, WORK, CARRY, MOVE];
+builders.target_count = 1;
+builders.body = [WORK, WORK, CARRY, MOVE, MOVE];
 
 var janators = {};
 janators.role_name = "Janator";
 janators.enable = true;
 janators.target_count = 2;
-janators.body = [WORK, CARRY, MOVE, MOVE];
+janators.body = [WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE];
 
 var guards = {};
 guards.role_name = "Guard";
