@@ -2,8 +2,9 @@ var util = require('05_utilities');
 
 //Get list of buildings and spawns able to store dank, spawn first then extensions
 
-var get_nearest_filter = function(creep, filter) {
-    result = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
+var get_nearest_filter = function(creep, filter, type) {
+    if (!type) {type=FIND_MY_STRUCTURES}
+    result = creep.pos.findClosestByRange(type, {
         filter: filter
     });
     if (result) {
@@ -51,9 +52,9 @@ var builder = function(creep) {
                 creep.moveTo(closest_build);
             }
         } else {
-            var repair = get_nearest_filter(creep, needs_repair)
+            var repair = get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)
             if (repair) {
-                if (creep.build(repair) == ERR_NOT_IN_RANGE) {
+                if (creep.repair(repair) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(repair);
                 }
             }
