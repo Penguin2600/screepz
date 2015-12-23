@@ -10,7 +10,17 @@ var get_nearest_filter = function(creep, filter, type) {
     if (result) {
         return result
     } else {
-        return creep.pos.findClosestByRange(FIND_MY_SPAWNS)
+        spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS)
+        // no spawn in this room?
+        if (!spawn) {
+            for (var key in Game.rooms) {
+                result = Game.rooms[key].find(FIND_MY_SPAWNS)
+                if (result) {
+                    return result[0]
+                }
+            }
+        }
+        return spawn;
     }
 }
 
@@ -30,13 +40,13 @@ var get_nearest_energy = function(creep) {
 }
 
 var storage = function(object) {
-    return (object.energy < object.energyCapacity);
+    return (object.energy < object.energyCapacity || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
 }
 var energy = function(object) {
     return (object.energy >= creep.carryCapacity);
 }
 var needs_repair = function(object) {
-    return object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax);
+    return (object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < 10000));
 }
 
 var builder = function(creep) {
@@ -109,9 +119,9 @@ var janator = function(creep) {
     }
 }
 
-var miner = function(creep) {
+var miner = function(creep, refresh) {
 
-    if (typeof(creep.memory.source) === 'undefined') {
+    if (typeof(creep.memory.source) === 'undefined' || refresh) {
         creep.memory.source = creep.pos.findClosestByRange(FIND_SOURCES).id;
     }
 
@@ -130,9 +140,70 @@ var miner = function(creep) {
     }
 }
 
+var get_unoccupied_source = function(){
+        for (var key in Game.rooms) {
+            var sources = Game.rooms[key].find(FIND_SOURCES)
+            for (var key1 in sources){
+                if (!sources[key1].occupied()) {
+                    return sources[key1].id
+                }
+            }
+    }
+}
+
+var excavator = function(creep, refresh) {
+
+    if (typeof(creep.memory.source) === 'undefined' || refresh) {
+        creep.memory.source = creep.pos.findClosestByRange(FIND_SOURCES).id;
+    
+
+    }
+
+    if (creep.carry.energy < creep.carryCapacity) {
+        var closest_source = Game.getObjectById(creep.memory.source);
+        if (creep.harvest(closest_source) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(closest_source);
+        }
+
+    } else {
+        var closest_store = get_nearest_filter(creep, storage)
+        var result = creep.transfer(closest_store, RESOURCE_ENERGY);
+        if (result == ERR_NOT_IN_RANGE) {
+            creep.moveTo(closest_store);
+        }
+    }
+}
+
+var pisant = function(creep) {
+    
+    room_flags=creep.room.find(FIND_FLAGS)
+    if (creep.carry.energy < creep.carryCapacity) {
+        for (var key in room_flags){
+            if (room_flags[key].color == COLOR_GREEN) {
+                if (typeof(creep.memory.source) === 'undefined' || Game.getObjectById('55c34a6b5be41a0a6e80bc69').room != creep.room) {
+                    miner(creep, 1)
+                }
+                    miner(creep)
+            } else {
+                for (var key in Game.flags) {
+                    if (Game.flags[key].color == COLOR_GREEN) {
+                        creep.moveTo(Game.flags[key]);
+                        break
+                    }
+                }
+            }
+        }
+    } else {
+        miner(creep)
+    }
+}
+
+
 exports.behavior = {
     "Miner": miner,
     "Guard": guard,
     "Builder": builder,
     "Janator": janator,
+    "Pisant": pisant,
+    "Excavator": excavator,
 }
