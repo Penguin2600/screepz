@@ -1,5 +1,3 @@
-var util = require('05_utilities');
-
 // get all rooms with a grey flag
 var get_flag_color = function(color) {
     var flags = []
@@ -223,7 +221,7 @@ var scout = function(creep) {
     }
 }
 
-exports.behavior = {
+behavior = {
     "Miner": miner,
     "Guard": guard,
     "Builder": builder,
@@ -232,3 +230,5 @@ exports.behavior = {
     "Mule": mule,
     "Scout": scout,
 }
+
+exports.behavior=behavior
