@@ -12,7 +12,7 @@ module.exports = function(grunt) {
         branch: grunt.option('branch') || 'dev'
       },
       dist: {
-        src: [grunt.option('path') ||'Mainframe/build/main.js']
+        src: [grunt.option('path') ||'Mainframe/*.js']
       }
     }
   });

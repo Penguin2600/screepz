@@ -1,5 +1,5 @@
-var req_types = require('10_types');                       //comp_out
-var creep_types = req_types.creep_types;                   //comp_out
+var req_types = require('10_types');
+var creep_types = req_types.creep_types;
 
 
 //Get list of spawners able to create desired creep

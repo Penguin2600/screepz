@@ -1,10 +1,5 @@
-var req_behaviors = require('20_behaviors');               //comp_out
-var behavior = req_behaviors.behavior;                     //comp_out
-//                                                         //comp_out
-var req_utilities = require('05_utilities');               //comp_out
-var start_profile = req_utilities.start_profile;           //comp_out
-var end_profile = req_utilities.end_profile;               //comp_out
-var garbage_collect = req_utilities.garbage_collect;       //comp_out
+var req_behaviors = require('20_behaviors');
+var req_utilities = require('05_utilities');
 
 
 
@@ -41,7 +36,7 @@ Creep.prototype.mem_move = function() {
             this.memory.path = this.pos.findPathTo(dest, {maxOps: 200});
             //try harder
             if( !this.memory.path.length ) {
-                this.memory.path = this.pos.findPathTo(dest, {maxOps: 1000});
+                this.memory.path = this.pos.findPathTo(dest, {maxOps: 1000, ignoreCreeps: true});
                 this.say(this.memory.path.length)
             }
             this.memory.next_route=Math.max(Math.ceil(this.memory.path.length/2),5)
@@ -58,5 +53,5 @@ Creep.prototype.mem_move = function() {
 
 Creep.prototype.behavior = function() {
 
-    behavior[this.memory.role](this)
+    req_behaviors.behavior[this.memory.role](this)
 }

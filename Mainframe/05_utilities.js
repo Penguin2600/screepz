@@ -9,6 +9,7 @@ var end_profile = function(profile_state) {
     if (time > profile_state[1]) {
         console.log (profile_state[0]+" Took " + time + " Cycles" )
     }
+    return time
 }
 
 exports.end_profile=end_profile
