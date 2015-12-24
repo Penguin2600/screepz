@@ -32,7 +32,8 @@ Creep.prototype.mem_move = function() {
     var dest = Game.getObjectById(this.destination())
     if (dest && !this.pos.isNearTo(dest)) {
         // use creep.memory.priority_route in urgent situations like battles.
-        if(!this.memory.path || this.memory.last_route>=this.memory.next_route || !this.memory.next_route || this.memory.priority_route){
+        if(!this.memory.path || this.memory.last_route>=this.memory.next_route || !this.memory.next_route || this.memory.priority_route)
+        {
             this.memory.last_route = 0
             this.memory.path = this.pos.findPathTo(dest, {maxOps: 200});
             //try harder
@@ -41,13 +42,14 @@ Creep.prototype.mem_move = function() {
                 this.say(this.memory.path.length)
             }
             this.memory.next_route=Math.max(Math.ceil(this.memory.path.length/2),5)
-            console.log(this,this.memory.next_route)
         }
     } else {
         this.memory.path = null
     }
+
     this.memory.last_route+=1;
     this.moveByPath(this.memory.path);
+
 }
 
 Creep.prototype.behavior = function() {
