@@ -26,7 +26,7 @@ var get_creeps = function() {
         var role= Game.creeps[name].memory.role;
         creep_counts[role] += 1;
     }
-
+    Memory.creep_counts = creep_counts
     return creep_counts
 }
 

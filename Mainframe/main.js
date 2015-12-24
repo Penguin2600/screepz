@@ -12,10 +12,36 @@ Source.prototype.occupied = function(opts) {
     }
     nearest = this.pos.findClosestByRange(FIND_MY_CREEPS, {filter: fnfilter})
     return this.pos.isNearTo(nearest);
-};
+}
+
+
+Creep.prototype.destination = function(destination){
+    if (destination){
+        if (destination.id){
+            this.memory.destination = destination.id; 
+        } else {
+            this.memory.destination = destination;
+        }
+        return this.memory.destination
+    } else {
+        return this.memory.destination
+    }
+}
+
+Creep.prototype.mem_move = function() {
+    var dest = Game.getObjectById(this.destination())
+    if (dest && !this.pos.isNearTo(dest)) {
+        this.moveTo(dest)
+    }
+}
+
+Creep.prototype.behavior = function() {
+
+    behaviors.behavior[this.memory.role](this)
+}
 
 module.exports.loop = function () {
-if (Game.time - Memory.sleep >= 10){
+if (Game.time - Memory.sleep >= 10 || !Memory.creep_counts){
     Memory.sleep = Game.time
     
     //ALWAYS GC BEFORE SPAWNING OR THE BABIES COME OUT TARDED
@@ -25,7 +51,10 @@ if (Game.time - Memory.sleep >= 10){
 
 for(var key in Game.creeps) {
         //stat=util.start_profile(Game.creeps[key].name,1)
-        behaviors.behavior[Game.creeps[key].memory.role](Game.creeps[key])
+        Game.creeps[key].behavior()
+        if (Game.creeps[key].memory.destination) {
+            Game.creeps[key].mem_move()
+        }
         //util.end_profile(stat)
     }
 

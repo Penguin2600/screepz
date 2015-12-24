@@ -14,13 +14,7 @@ var mule = {};
 mule.role_name = "Mule";
 mule.enable = true;
 mule.target_count = 4;
-mule.body = [CARRY, CARRY, MOVE, MOVE];
-
-var pisant = {};
-pisant.role_name = "Pisant";
-pisant.enable = false;
-pisant.target_count = 3;
-pisant.body = [WORK, CARRY, MOVE, MOVE];
+mule.body = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
 
 var builders = {};
 builders.role_name = "Builder";
@@ -40,6 +34,13 @@ guards.enable = true;
 guards.target_count = 2;
 guards.body = [TOUGH, ATTACK, ATTACK, MOVE];
 
+var scouts = {};
+scouts.role_name = "Scout";
+scouts.enable = true;
+scouts.target_count = 1;
+scouts.body = [MOVE];
+
+
 //order is creation priority
-var creep_types = [miners, excavator, mule, janators, builders, guards, pisant]
+var creep_types = [miners, excavator, mule, janators, builders, guards, scouts]
 exports.creep_types = creep_types
