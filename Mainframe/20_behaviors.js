@@ -166,21 +166,31 @@ var mule = function(creep) {
 
     // Do we have energy? if so drop our entire load
     // Are we empty? if so pick up a full load.
-    if (creep.carry.energy == 0){
-        
-        var closest_resource = Game.getObjectById(creep.memory.target)
-        if (!closest_resource) {
-            creep.memory.target = get_largest_resource()
+
+    if (!creep.memory.target_resource) {
+        creep.memory.target_resource = get_largest_resource()
+    }
+    var target_resource = Game.getObjectById(creep.memory.target_resource)
+
+    if (creep.carry.energy ==0){
+        // if our target dissapears is it because we finished it? if so wait to fill.
+        //otherwise find a new target
+
+        if (!target_resource) {
+            creep.memory.target_resource = get_largest_resource()
         }
 
-        creep.destination(closest_resource)
-        creep.pickup(closest_resource)
+        creep.destination(target_resource)
+        creep.pickup(target_resource)
 
     } else {
         var closest_store = get_nearest_filter(creep, storage)
 
         creep.destination(closest_store)
-        creep.transfer(closest_store, RESOURCE_ENERGY);
+        // get new best after we drop off
+        if(creep.transfer(closest_store, RESOURCE_ENERGY)) {
+            creep.memory.target_resource = get_largest_resource()
+        }
     }
 }
 
@@ -191,7 +201,7 @@ var scout = function(creep) {
         //dont double up scouts
         var scouts = Memory.creep_counts["Scout"]
         if (scouts) {
-            other_scouts=[]
+            var other_scouts=[]
             for (var key in scouts){
                 other_scouts.push(scouts[key].destination())
             }
@@ -202,7 +212,10 @@ var scout = function(creep) {
             // if there are no friendly units in that room get flag as target
             if (!Game.rooms[flagged[key].pos.roomName]) {
                 // if no other scouts own that room
-                if (other_scouts.indexOf(flagged[key].id) == -1) {
+                if (!other_scouts){
+                    creep.destination(flagged[key])
+                }
+                else if (other_scouts.indexOf(flagged[key].id) == -1) {
                     creep.destination(flagged[key])
                 }
             }
