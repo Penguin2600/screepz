@@ -24,7 +24,9 @@ if (Game.time - Memory.sleep >= 10){
 }
 
 for(var key in Game.creeps) {
+        //stat=util.start_profile(Game.creeps[key].name,1)
         behaviors.behavior[Game.creeps[key].memory.role](Game.creeps[key])
+        //util.end_profile(stat)
     }
 
 }

@@ -91,30 +91,16 @@ var guard = function(creep) {
 var janator = function(creep) {
     var room_controller = creep.room.controller
     var at_controller = creep.pos.isNearTo(creep.room.controller)
-
-    if (creep.carry.energy > 0 && at_controller) {
-        if (creep.upgradeController(room_controller) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(room_controller);
-        }
-    }
-
-    if (creep.carry.energy == creep.carryCapacity) {
-        if (creep.upgradeController(room_controller) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(room_controller);
-        }
-    }
-
-    if (creep.carry.energy == 0 && at_controller) {
+    // Are we at the controller? if so drop our entire load
+    // Are we empty? if so pick up a full load
+    if ((creep.carry.energy == 0) || (creep.carry.energy < creep.carryCapacity && !at_controller)){
         var closest_source = get_nearest_energy(creep);
         if (closest_source.transferEnergy(creep) == ERR_NOT_IN_RANGE) {
             creep.moveTo(closest_source);
         }
-    }
-
-    if (creep.carry.energy < creep.carryCapacity && !at_controller) {
-        var closest_source = get_nearest_energy(creep);
-        if (closest_source.transferEnergy(creep) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(closest_source);
+    } else {
+        if (creep.upgradeController(room_controller) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(room_controller);
         }
     }
 }
@@ -141,35 +127,69 @@ var miner = function(creep, refresh) {
 }
 
 var get_unoccupied_source = function(){
-        for (var key in Game.rooms) {
-            var sources = Game.rooms[key].find(FIND_SOURCES)
-            for (var key1 in sources){
-                if (!sources[key1].occupied()) {
-                    return sources[key1].id
-                }
+    for (var key in Game.rooms) {
+        var sources = Game.rooms[key].find(FIND_SOURCES)
+        for (var key1 in sources){
+            if (!sources[key1].occupied()) {
+                return sources[key1].id
             }
+        }
     }
 }
 
+var get_largest_resource = function(){
+    var largest=0
+    var result=null
+    for (var key in Game.rooms) {
+        var resources = Game.rooms[key].find(FIND_DROPPED_RESOURCES)
+        for (var key1 in resources){
+            if (resources[key1].amount > largest) {
+                largest = resources[key1].amount
+                result = resources[key1].id
+            }
+        }
+    }
+    return result
+}
+
 var excavator = function(creep, refresh) {
-
+    //find a source which doesnt already have an excavator
     if (typeof(creep.memory.source) === 'undefined' || refresh) {
-        creep.memory.source = creep.pos.findClosestByRange(FIND_SOURCES).id;
-    
-
+        creep.memory.source = get_unoccupied_source()
     }
 
-    if (creep.carry.energy < creep.carryCapacity) {
-        var closest_source = Game.getObjectById(creep.memory.source);
-        if (creep.harvest(closest_source) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(closest_source);
+    var my_source = Game.getObjectById(creep.memory.source);
+    if (creep.harvest(my_source) == ERR_NOT_IN_RANGE) {
+        creep.moveTo(my_source);
+    }
+}
+
+var mule = function(creep) {
+
+    if (!creep.memory.target) {
+        creep.memory.target = get_largest_resource()
+    }
+
+    // Do we have energy? if so drop our entire load
+    // Are we empty? if so pick up a full load.
+    if ((creep.carry.energy == 0) || (creep.carry.energy < creep.carryCapacity && creep.pos.isNearTo(creep.memory.target))){
+
+        var closest_resource = Game.getObjectById(creep.memory.target);
+        if (!closest_resource) {
+            creep.memory.target = get_largest_resource()
         }
 
+        if (creep.pickup(closest_resource) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(closest_resource);
+        }
     } else {
         var closest_store = get_nearest_filter(creep, storage)
         var result = creep.transfer(closest_store, RESOURCE_ENERGY);
         if (result == ERR_NOT_IN_RANGE) {
             creep.moveTo(closest_store);
+        } else {
+            //get new target
+            creep.memory.target = get_largest_resource()
         }
     }
 }
@@ -206,4 +226,5 @@ exports.behavior = {
     "Janator": janator,
     "Pisant": pisant,
     "Excavator": excavator,
+    "Mule": mule,
 }
