@@ -1,45 +1,63 @@
 var miners = {};
 miners.role_name = "Miner";
-miners.enable = false;
-miners.target_count = 6;
-miners.body = [WORK,WORK, CARRY, MOVE, MOVE];
+miners.target_count = 1
+miners.template = {
+//PART: [ratio,max]
+    WORK:   [1,2],
+    CARRY:  [1,1],
+    MOVE:   [1,2],
+}
 
 var excavator = {};
 excavator.role_name = "Excavator";
-excavator.enable = true;
 excavator.target_count = 2;
-excavator.body = [WORK,WORK,WORK,WORK,WORK, MOVE, MOVE, MOVE];
+excavator.template = {
+    WORK:   [2,5],
+    MOVE:   [1,3],
+}
 
 var mule = {};
 mule.role_name = "Mule";
-mule.enable = true;
 mule.target_count = 4;
-mule.body = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE];
+mule.template = {
+    CARRY:  [1,5],
+    MOVE:   [1,5],
+}
 
 var builders = {};
 builders.role_name = "Builder";
-builders.enable = true;
 builders.target_count = 3;
-builders.body = [WORK, WORK, CARRY, MOVE, MOVE];
+builders.template = {
+    WORK:   [1,4],
+    CARRY:  [1,1],
+    MOVE:   [1,4],
+}
 
 var janators = {};
 janators.role_name = "Janator";
-janators.enable = true;
 janators.target_count = 2;
-janators.body = [WORK,WORK,WORK,WORK,WORK, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+janators.template = {
+    WORK:   [1,5],
+    CARRY:  [1,1],
+    MOVE:   [1,5],
+}
 
 var guards = {};
 guards.role_name = "Guard";
-guards.enable = true;
 guards.target_count = 2;
-guards.body = [TOUGH, ATTACK, ATTACK, MOVE];
+guards.template = {
+    TOUGH:   [1,5],
+    ATTACK:  [1,5],
+    MOVE:    [1,5],
+}
 
 var scouts = {};
 scouts.role_name = "Scout";
-scouts.enable = true;
 scouts.target_count = 1;
-scouts.body = [MOVE];
-
+//scouts.body = [MOVE];
+scouts.template = {
+    MOVE:    [1,1],
+}
 
 //order is creation priority
 var creep_types = [miners, excavator, mule, janators, builders, guards, scouts]

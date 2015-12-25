@@ -8,6 +8,7 @@ var get_flag_color = function(color) {
     }
     return flags
 }
+exports.get_flag_color=get_flag_color
 
 var get_unoccupied_source = function(){
     for (var key in Game.rooms) {
@@ -19,6 +20,7 @@ var get_unoccupied_source = function(){
         }
     }
 }
+exports.get_unoccupied_source=get_unoccupied_source
 
 var get_largest_resource = function(){
     var largest=0
@@ -34,18 +36,18 @@ var get_largest_resource = function(){
     }
     return result
 }
-
+exports.get_largest_resource=get_largest_resource
 
 //Get list of buildings and spawns able to store dank, spawn first then extensions
 var get_nearest_filter = function(creep, filter, type) {
     if (!type) {type=FIND_MY_STRUCTURES}
-    result = creep.pos.findClosestByRange(type, {
+    var result = creep.pos.findClosestByRange(type, {
         filter: filter
     });
     if (result) {
         return result
     } else {
-        spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS)
+        var spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS)
         // no spawn in this room?
         if (!spawn) {
             for (var key in Game.rooms) {
@@ -58,10 +60,11 @@ var get_nearest_filter = function(creep, filter, type) {
         return spawn;
     }
 }
+exports.get_nearest_filter=get_nearest_filter
 
 var get_nearest_energy = function(creep) {
 
-    struct = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, { //can be opti
+    var struct = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, { //can be opti
         filter: function(object) {
             return (object.energy >= creep.carryCapacity);
         }
@@ -73,19 +76,27 @@ var get_nearest_energy = function(creep) {
         return creep.pos.findClosestByRange(FIND_MY_SPAWNS)
     }
 }
+exports.get_nearest_energy=get_nearest_energy
 
 var storage = function(object) {
     return (object.energy < object.energyCapacity || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
 }
+exports.storage=storage
+
 var empty_extension = function(object) {
     return (object.structureType == STRUCTURE_EXTENSION && object.store.energy < object.storeCapacity);
 }
+exports.empty_extension=empty_extension
+
 var energy = function(object) {
     return (object.energy >= creep.carryCapacity);
 }
+exports.energy=energy
+
 var needs_repair = function(object) {
     return (object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < 10000));
 }
+exports.needs_repair=needs_repair
 
 var builder = function(creep) {
     if (creep.carry.energy == 0) {
@@ -201,7 +212,7 @@ var scout = function(creep) {
         if (scouts) {
             var other_scouts=[]
             for (var key in scouts){
-                other_scouts.push(scouts[key].destination())
+                other_scouts.push(Game.getObjectById(scouts[key]).destination())
             }
         }
         //GET ROOMS TAGED FOR SCOUTING
@@ -221,7 +232,7 @@ var scout = function(creep) {
     }
 }
 
-behavior = {
+var behavior = {
     "Miner": miner,
     "Guard": guard,
     "Builder": builder,

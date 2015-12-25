@@ -1,7 +1,6 @@
 var start_profile = function(name, thresh) {
     return [name, thresh, Game.getUsedCpu()]
 }
-
 exports.start_profile=start_profile
 
 var end_profile = function(profile_state) {
@@ -11,7 +10,6 @@ var end_profile = function(profile_state) {
     }
     return time
 }
-
 exports.end_profile=end_profile
 
 var garbage_collect = function () {
@@ -23,5 +21,4 @@ var garbage_collect = function () {
         }
     }
 }
-
 exports.garbage_collect = garbage_collect

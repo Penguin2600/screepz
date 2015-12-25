@@ -1,16 +1,25 @@
 var req_behaviors = require('20_behaviors');
 var req_utilities = require('05_utilities');
 
-
+//////////
+//Source//
+//////////
 
 Source.prototype.occupied = function(opts) {
-    var fnfilter = function(object) {
-        return (object.memory.role == "Excavator");
+    var excavators = Memory.creep_counts["Excavator"]
+    if (excavators) {
+        for (var key in excavators){
+            if (Game.getObjectById(excavators[key]).memory.source == this.id) {
+                return true;
+            }
+        }
     }
-    nearest = this.pos.findClosestByRange(FIND_MY_CREEPS, {filter: fnfilter})
-    return this.pos.isNearTo(nearest);
+    return false;
 }
 
+/////////
+//Creep//
+/////////
 
 Creep.prototype.destination = function(destination){
     if (destination){
@@ -52,6 +61,5 @@ Creep.prototype.mem_move = function() {
 }
 
 Creep.prototype.behavior = function() {
-
     req_behaviors.behavior[this.memory.role](this)
 }
