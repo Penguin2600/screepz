@@ -14,13 +14,31 @@ var get_unoccupied_source = function(){
     for (var key in Game.rooms) {
         var sources = Game.rooms[key].find(FIND_SOURCES)
         for (var key1 in sources){
-            if (!sources[key1].occupied()) {
+            if (!sources[key1].has_attention("Excavator")) {
                 return sources[key1].id
             }
         }
     }
 }
 exports.get_unoccupied_source=get_unoccupied_source
+
+var get_reciever = function(attendance_limit, reciever_type, slave_type){
+
+    var recievers = Memory.creep_counts[reciever_type]
+
+    if (recievers) {
+        for (var key in recievers){
+            var reciever = Game.getObjectById(recievers[key])
+            if (reciever){
+                var attendance = Game.getObjectById(recievers[key]).has_attention(slave_type) 
+                if (attendance < attendance_limit) {
+                    return recievers[key]
+                }
+            }
+        }
+    }
+}
+exports.get_reciever=get_reciever
 
 var get_largest_resource = function(){
     var largest=0
@@ -66,7 +84,7 @@ var get_nearest_energy = function(creep) {
 
     var struct = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, { //can be opti
         filter: function(object) {
-            return (object.energy >= creep.carryCapacity);
+            return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))
         }
     });
 
@@ -79,22 +97,27 @@ var get_nearest_energy = function(creep) {
 exports.get_nearest_energy=get_nearest_energy
 
 var storage = function(object) {
-    return (object.energy < object.energyCapacity || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
+    return ((object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
 }
 exports.storage=storage
 
-var empty_extension = function(object) {
-    return (object.structureType == STRUCTURE_EXTENSION && object.store.energy < object.storeCapacity);
+var storage_struct = function(object) {
+    return (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity);
 }
+
+var empty_extension = function(object) {
+    return (object.structureType == STRUCTURE_EXTENSION && object.energy < object.energyCapacity);
+}
+
 exports.empty_extension=empty_extension
 
 var energy = function(object) {
-    return (object.energy >= creep.carryCapacity);
+    return (object.energy > 0);
 }
 exports.energy=energy
 
 var needs_repair = function(object) {
-    return (object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < 10000));
+    return (object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < 20000));
 }
 exports.needs_repair=needs_repair
 
@@ -121,11 +144,13 @@ var builder = function(creep) {
 }
 
 var guard = function(creep) {
-    var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+    var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
     if (target) {
+        creep.memory.priority_route=true;
         creep.destination(target)
         creep.attack(target) 
     } else {
+        creep.memory.priority_route=false;
         creep.destination(get_flag_color(COLOR_YELLOW)[0])
     }
 }
@@ -162,13 +187,13 @@ var miner = function(creep, refresh) {
 
 var excavator = function(creep, refresh) {
     //find a source which doesnt already have an excavator
-    if (typeof(creep.memory.source) === 'undefined' || refresh) {
-        creep.memory.source = get_unoccupied_source()
+    if (!creep.memory.target) {
+        creep.memory.target = get_unoccupied_source()
     }
 
-    var source = Game.getObjectById(creep.memory.source);
-    creep.destination(source)
-    creep.harvest(source)
+    var target = Game.getObjectById(creep.memory.target);
+    creep.destination(target)
+    creep.harvest(target)
 }
 
 var mule = function(creep) {
@@ -176,29 +201,44 @@ var mule = function(creep) {
     // Do we have energy? if so drop our entire load
     // Are we empty? if so pick up a full load.
 
-    if (!creep.memory.target_resource) {
-        creep.memory.target_resource = get_largest_resource()
+    //if our reciever doesnt exist find a new one
+    if (!Game.getObjectById(creep.memory.target)) {
+        //creep.memory.target_resource = get_largest_resource()
+        var excavators = get_reciever(1,"Excavator","Mule")
+        creep.memory.target = excavators
     }
-    var target_resource = Game.getObjectById(creep.memory.target_resource)
 
-    if (creep.carry.energy ==0){
-        // if our target dissapears is it because we finished it? if so wait to fill.
-        //otherwise find a new target
+    var target = Game.getObjectById(creep.memory.target)
+    var at_target = creep.pos.isNearTo(target)
+    if (target) {
 
-        if (!target_resource) {
-            creep.memory.target_resource = get_largest_resource()
-        }
+        if (creep.carry.energy == 0 || (creep.carry.energy < creep.carryCapacity && at_target)){
 
-        creep.destination(target_resource)
-        creep.pickup(target_resource)
+            creep.destination(target)
+            var resource = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
+            filter: function(object) {return creep.pos.isNearTo(object)}
+            });
+            creep.pickup(resource)
 
-    } else {
-        var closest_store = get_nearest_filter(creep, storage)
 
-        creep.destination(closest_store)
-        // get new best after we drop off
-        if(creep.transfer(closest_store, RESOURCE_ENERGY)) {
-            creep.memory.target_resource = get_largest_resource()
+            // if (target.structureType) {
+            //     target.transferEnergy(creep)
+            // }
+
+        } else {
+
+            // if (target.structureType) {
+            //     console.log("struct",  creep)
+            //     var deposit_target = get_nearest_filter(creep, empty_extension)
+            //     //make sure we prioritize
+            //     creep.memory.target=null
+            // } else {
+                 var deposit_target = get_nearest_filter(creep, storage) 
+            //     console.log("else",  creep)
+            // }
+
+            creep.destination(deposit_target)
+            creep.transferEnergy(deposit_target)
         }
     }
 }

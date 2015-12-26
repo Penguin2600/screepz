@@ -5,17 +5,36 @@ var req_utilities = require('05_utilities');
 //Source//
 //////////
 
-Source.prototype.occupied = function(opts) {
-    var excavators = Memory.creep_counts["Excavator"]
-    if (excavators) {
-        for (var key in excavators){
-            if (Game.getObjectById(excavators[key]).memory.source == this.id) {
-                return true;
+Source.prototype.has_attention = function(creepType) {
+    var creeps = Memory.creep_counts[creepType]
+    var attendants = 0
+    if (creeps) {
+        for (var key in creeps){
+            if (Game.getObjectById(creeps[key]).memory.target == this.id) {
+                attendants+=1;
             }
         }
     }
-    return false;
+    return attendants;
 }
+
+/////////////
+//Structure//
+/////////////
+
+Structure.prototype.has_attention = function(creepType) {
+    var creeps = Memory.creep_counts[creepType]
+    var attendants = 0
+    if (creeps) {
+        for (var key in creeps){
+            if (Game.getObjectById(creeps[key]).memory.target == this.id) {
+                attendants+=1;
+            }
+        }
+    }
+    return attendants;
+}
+
 
 /////////
 //Creep//
@@ -32,6 +51,22 @@ Creep.prototype.destination = function(destination){
     } else {
         return this.memory.destination
     }
+}
+
+Creep.prototype.has_attention = function(creepType) {
+    var creeps = Memory.creep_counts[creepType]
+    var attendants = 0
+    if (creeps) {
+        for (var key in creeps){
+            var creep = Game.getObjectById(creeps[key])
+            if (creep) {
+                if (creep.memory.target == this.id) {
+                    attendants+=1;
+                }
+            }
+        }
+    }
+    return attendants;
 }
 
 Creep.prototype.mem_move = function() {

@@ -1,11 +1,11 @@
 var miners = {};
 miners.role_name = "Miner";
-miners.target_count = 1
+miners.target_count = 0
 miners.template = {
 //PART: [ratio,max]
-    WORK:   [1,2],
+    WORK:   [1,1],
     CARRY:  [1,1],
-    MOVE:   [1,2],
+    MOVE:   [1,1],
 }
 
 var excavator = {};
@@ -18,7 +18,7 @@ excavator.template = {
 
 var mule = {};
 mule.role_name = "Mule";
-mule.target_count = 4;
+mule.target_count = 3;
 mule.template = {
     CARRY:  [1,5],
     MOVE:   [1,5],
@@ -26,7 +26,7 @@ mule.template = {
 
 var builders = {};
 builders.role_name = "Builder";
-builders.target_count = 3;
+builders.target_count = 2;
 builders.template = {
     WORK:   [1,4],
     CARRY:  [1,1],
@@ -37,9 +37,9 @@ var janators = {};
 janators.role_name = "Janator";
 janators.target_count = 2;
 janators.template = {
-    WORK:   [1,5],
-    CARRY:  [1,1],
-    MOVE:   [1,5],
+    WORK:   [1,10],
+    CARRY:  [1,3],
+    MOVE:   [1,10],
 }
 
 var guards = {};
@@ -53,7 +53,7 @@ guards.template = {
 
 var scouts = {};
 scouts.role_name = "Scout";
-scouts.target_count = 1;
+scouts.target_count = 0;
 //scouts.body = [MOVE];
 scouts.template = {
     MOVE:    [1,1],
