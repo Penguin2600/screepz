@@ -6,7 +6,7 @@ var req_utilities = require('05_utilities');
 //////////
 
 Source.prototype.has_attention = function(creepType) {
-    var creeps = Memory.creep_counts[creepType]
+    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
     var attendants = 0
     if (creeps) {
         for (var key in creeps){
@@ -23,7 +23,7 @@ Source.prototype.has_attention = function(creepType) {
 /////////////
 
 Structure.prototype.has_attention = function(creepType) {
-    var creeps = Memory.creep_counts[creepType]
+    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
     var attendants = 0
     if (creeps) {
         for (var key in creeps){
@@ -54,7 +54,7 @@ Creep.prototype.destination = function(destination){
 }
 
 Creep.prototype.has_attention = function(creepType) {
-    var creeps = Memory.creep_counts[creepType]
+    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
     var attendants = 0
     if (creeps) {
         for (var key in creeps){
