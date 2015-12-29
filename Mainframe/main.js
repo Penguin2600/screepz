@@ -59,24 +59,20 @@ var get_creeps = function(room_key) {
 }
 
 var calc_creep_need = function (room_key) {
+
     var creep_targets={}
     var room = Game.rooms[room_key]
-    if (!Memory.manualMode) {
 
-        creep_targets["Miner"] = 1 //Math.max((1 - Memory.rooms[room_key].creep_counts["Excavator"].length, 0))
-        creep_targets["Guard"] = 2
-        creep_targets["Builder"] = 1
-        creep_targets["Janator"] = 1
-        creep_targets["Excavator"] = Memory.rooms[room_key].sources.length
-        creep_targets["Mule"] = creep_targets["Excavator"] + 1
-        creep_targets["Scout"] = 0
-        creep_targets["Settler"] = 0
+    creep_targets["Miner"] = 0 //Math.max((1 - Memory.rooms[room_key].creep_counts["Excavator"].length, 0))
+    creep_targets["Guard"] = 2
+    creep_targets["Builder"] = 1
+    creep_targets["Janator"] = Math.ceil(room.controller.pos.getRangeTo(room.controller.pos.findClosestByRange(FIND_MY_STRUCTURES,{filter: function(object) {return object.energyCapacity>200}}))/6)
+    creep_targets["Excavator"] = Memory.rooms[room_key].sources.length
+    creep_targets["Mule"] = creep_targets["Excavator"] + 1
+    creep_targets["Scout"] = 0
+    creep_targets["Settler"] = 0
 
-        return creep_targets
-    } else {
-        //make no change
-        return Memory.rooms[room_key].creep_targets
-    }
+    return creep_targets
 
 }
 

@@ -97,8 +97,7 @@ var get_nearest_energy = function(creep) {
         obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: stored_filter})
         if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj)
 
-        var dropped_filter = function(object) {return (object.amount > 10)}
-        obj = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: dropped_filter})
+        obj = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES)
         // subtract 5 to make dropped energy a bit more tempting
         if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) - 5
     }
@@ -106,7 +105,7 @@ var get_nearest_energy = function(creep) {
     // if we can mine also return nearest source
     if (creep.getActiveBodyparts(WORK) > 0) {
         obj = creep.pos.findClosestByRange(FIND_SOURCES)
-        // add 10 to make source energy a bit less tempting
+        // add 10 to make source energy a lot less tempting
         if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) + 10
     }
 
@@ -182,6 +181,28 @@ var builder = function(creep) {
     }
 }
 
+var janator = function(creep) {
+    if (!creep.memory.target || !Game.getObjectById(creep.memory.target)) {
+        var room_controller = creep.room.controller
+        creep.memory.target = room_controller ? room_controller.id : null
+    }
+
+    var target = Game.getObjectById(creep.memory.target)
+    var working = creep.memory.working
+    if (creep.carry.energy < creep.carryCapacity && !working){
+
+        var closest_source = get_nearest_energy(creep);
+        creep.destination(closest_source)
+        creep.get_energy_from(closest_source)
+
+    } else {
+        var result = -1
+        creep.destination(target)
+        var result = creep.upgradeController(target)
+    }
+    creep.memory.working = (result==0) ? true : false
+}
+
 
 var guard = function(creep) {
     var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
@@ -192,21 +213,6 @@ var guard = function(creep) {
     } else {
         creep.memory.priority_route=false;
         creep.destination(get_flag_color(COLOR_YELLOW, creep.room.name)[0])
-    }
-}
-
-var janator = function(creep) {
-    var room_controller = creep.room.controller
-    var at_controller = creep.pos.isNearTo(creep.room.controller)
-    if ((creep.carry.energy == 0) || (creep.carry.energy < creep.carryCapacity && !at_controller)){
-        var closest_source = get_nearest_energy(creep);
-
-        creep.destination(closest_source)
-        creep.get_energy_from(closest_source)
-
-    } else {
-        creep.destination(room_controller)
-        creep.upgradeController(room_controller)
     }
 }
 
