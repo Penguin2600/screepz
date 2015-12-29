@@ -64,3 +64,15 @@ scouts.template = {
 //order is creation priority
 var creep_types = [miners, excavator, mule, janators, settlers, builders, guards, scouts]
 exports.creep_types = creep_types
+
+// //Gather Energy
+// Mine->Resource (number of mines in room or adjacent flagged rooms)
+
+// Resource-> Spawn, Ext, Store, Link (number of mines in room or adjacent flagged rooms)
+// Storage -> Spawn, Ext, Link (number of storages)
+
+// //Build
+// Mine, Resource, Spawn, Ext, Link, Storage -> Build
+
+// //Feed
+// Mine, Resource, Spawn, Ext, Link, Storage -> Controller

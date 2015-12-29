@@ -43,7 +43,7 @@ Structure.prototype.has_attention = function(creepType) {
 Creep.prototype.destination = function(destination){
     if (destination){
         if (destination.id){
-            this.memory.destination = destination.id; 
+            this.memory.destination = destination.id;
         } else {
             this.memory.destination = destination;
         }
@@ -67,6 +67,18 @@ Creep.prototype.has_attention = function(creepType) {
         }
     }
     return attendants;
+}
+
+Creep.prototype.get_energy_from = function(object) {
+    if (this.pos.isNearTo(object)){
+        if (object.structureType) {
+            object.transferEnergy(this)
+        } else if (object.amount) {
+            this.pickup(object)
+        } else {
+            this.harvest(object)
+        }
+    }
 }
 
 Creep.prototype.mem_move = function() {

@@ -86,26 +86,38 @@ var get_nearest_filter = function(creep, filter, type) {
 }
 exports.get_nearest_filter=get_nearest_filter
 
+
 var get_nearest_energy = function(creep) {
+    var obj = null
+    var energy_sources = {} 
 
-    var struct = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, { //can be opti
-        filter: function(object) {
-            return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))
-        }
-    });
+    if (creep.carryCapacity > 0) {
 
-    if (struct) {
-        return struct
-    } else {
-        return creep.pos.findClosestByRange(FIND_MY_SPAWNS)
+        var stored_filter = function(object) {return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))}
+        obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: stored_filter})
+        if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj)
+
+        var dropped_filter = function(object) {return (object.amount > 10)}
+        obj = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: dropped_filter})
+        // subtract 5 to make dropped energy a bit more tempting
+        if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) - 5
     }
+
+    // if we can mine also return nearest source
+    if (creep.getActiveBodyparts(WORK) > 0) {
+        obj = creep.pos.findClosestByRange(FIND_SOURCES)
+        // add 10 to make source energy a bit less tempting
+        if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) + 10
+    }
+
+    var closest = Object.keys(energy_sources).sort(function(a,b){return energy_sources[a]-energy_sources[b]})[0]
+
+    return Game.getObjectById(closest)
 }
-exports.get_nearest_energy=get_nearest_energy
 
 var storage = function(object) {
     return ((object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
 }
-exports.storage=storage
 
 var storage_struct = function(object) {
     return (object.structureType == STRUCTURE_STORAGE);
@@ -115,12 +127,9 @@ var empty_extension = function(object) {
     return ((object.structureType == STRUCTURE_EXTENSION && object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_LINK && object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_TOWER && object.energy < object.energyCapacity));
 }
 
-exports.empty_extension=empty_extension
-
 var energy = function(object) {
     return (object.energy > 0);
 }
-exports.energy=energy
 
 var needs_repair = function(object) {
     return ((object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < Memory.wallHP)));
@@ -130,27 +139,45 @@ var needs_improvement = function(object) {
     return (object.structureType == STRUCTURE_RAMPART && (object.hits < 50000));
 }
 
-exports.needs_repair=needs_repair
 
 var builder = function(creep) {
-    if (creep.carry.energy == 0) {
-        var closest_source = get_nearest_energy(creep);
-        if (closest_source) {
-            creep.destination(closest_source)
-            closest_source.transferEnergy(creep)
-        }
-    } else {
-        var closest_build = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-        if (closest_build) {
-            creep.destination(closest_build)
-            creep.build(closest_build)
 
-        } else {
-            var repair = get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)
-            if (repair) {
-                creep.destination(repair)
-                creep.repair(repair) 
+    if (!creep.memory.target || !Game.getObjectById(creep.memory.target)) {
+        var construction_sites = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
+        creep.memory.target = construction_sites ? construction_sites.id : null
+    }
+    if (!creep.memory.target) {
+        var repair_sites = get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)
+        creep.memory.target = repair_sites ? repair_sites.id : null
+    }
+
+    if (creep.memory.target) {
+        var target = Game.getObjectById(creep.memory.target)
+        var working = creep.memory.working
+
+        // we need energy
+        if (creep.carry.energy < creep.carryCapacity && !working) {
+            var closest_source = get_nearest_energy(creep);
+            if (closest_source) {
+                creep.destination(closest_source)
+                creep.get_energy_from(closest_source)
             }
+
+        // we have energy
+        } else {
+            var result = -1
+            creep.destination(target)
+            if (target.progressTotal) {
+                result = creep.build(target)
+            } else {
+                result = creep.repair(target)
+                //repair complete release target
+                if (target.hits == target.hitsMax) {
+                    creep.memory.target = null;
+                    creep.memory.working=false
+                }
+            }
+            creep.memory.working = (result==0) ? true : false
         }
     }
 }
@@ -173,8 +200,10 @@ var janator = function(creep) {
     var at_controller = creep.pos.isNearTo(creep.room.controller)
     if ((creep.carry.energy == 0) || (creep.carry.energy < creep.carryCapacity && !at_controller)){
         var closest_source = get_nearest_energy(creep);
+
         creep.destination(closest_source)
-        closest_source.transferEnergy(creep)
+        creep.get_energy_from(closest_source)
+
     } else {
         creep.destination(room_controller)
         creep.upgradeController(room_controller)
@@ -237,7 +266,6 @@ var excavator = function(creep, refresh) {
     //find a source which doesnt already have an excavator
 
     if (!creep.memory.target) {
-        console.log(creep)
         creep.memory.target = get_unoccupied_source(creep.room.name)
     }
 
@@ -346,3 +374,4 @@ var behavior = {
 }
 
 exports.behavior=behavior
+

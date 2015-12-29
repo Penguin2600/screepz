@@ -12,8 +12,8 @@ var get_obj_id = function(obj) {
     if (obj.id) {
         return obj.id;
     } else {
-       return null; 
-    }  
+       return null;
+    }
 }
 
 var get_repair_target = function(structures) {
@@ -23,17 +23,17 @@ var get_repair_target = function(structures) {
     var pct = 100;
 
     for (var key in structures) {
-        structure = Game.getObjectById(structures[key])
+        var structure = Game.getObjectById(structures[key])
         //calculate most need
         if ((structure.structureType == STRUCTURE_RAMPART) || (structure.structureType == STRUCTURE_WALL)) {
-            var pct = (structure.hits/Memory.wallHP)
+            pct = (structure.hits/Memory.wallHP)
         } else {
             pct = (structure.hits/structure.hitsMax)
         }
 
         if (pct < most_need) {
             most_need = pct;
-            struct_need = structure.id 
+            struct_need = structure.id
         }
 
     }
@@ -81,8 +81,10 @@ var calc_creep_need = function (room_key) {
 }
 
 var update_room_model = function() {
+    Memory.rooms={}
     for (var key in Game.rooms) {
         Memory.rooms[key] = {}
+        Memory.rooms[key].flags = Game.rooms[key].find(FIND_FLAGS).map(get_obj_id)
         Memory.rooms[key].sources = Game.rooms[key].find(FIND_SOURCES).map(get_obj_id)
         Memory.rooms[key].structures = Game.rooms[key].find(FIND_STRUCTURES).map(get_obj_id)
         Memory.rooms[key].tower = Game.rooms[key].find(FIND_MY_STRUCTURES, {filter: { structureType: STRUCTURE_TOWER }}).map(get_obj_id)
@@ -92,10 +94,12 @@ var update_room_model = function() {
     }
 }
 
+
+
 module.exports.loop = function () {
 if (Game.time - Memory.sleep >= 10 || !Memory.creep_counts){
     Memory.sleep = Game.time
-    
+
     //ALWAYS GC BEFORE SPAWNING OR THE BABIES COME OUT TARDED
     update_room_model();
     req_utilities.garbage_collect();
@@ -104,21 +108,18 @@ if (Game.time - Memory.sleep >= 10 || !Memory.creep_counts){
     }
 
     //temporary?
-    var linkFrom = Game.spawns.Mainframe.room.lookForAt('structure', 25, 19)[0];
-    var linkTo = Game.spawns.Mainframe.room.lookForAt('structure', 43, 19)[0];
-    linkFrom.transferEnergy(linkTo);
+    //var linkFrom = Game.spawns.Mainframe.room.lookForAt('structure', 25, 19)[0];
+    //var linkTo = Game.spawns.Mainframe.room.lookForAt('structure', 43, 19)[0];
+    //linkFrom.transferEnergy(linkTo);
 
 }
+
 //per room activities
 for (var key in Memory.rooms) {
-    tower = Game.getObjectById(Memory.rooms[key].tower)
+    var tower = Game.getObjectById(Memory.rooms[key].tower)
     if (tower) {
         tower.repair(Game.getObjectById(Memory.rooms[key].needsRepair))
     }
-}
-
-if (!Memory.rooms) {
-    Memory.rooms={}
 }
 
 //per creep activities
@@ -127,4 +128,30 @@ for(var key in Game.creeps) {
         Game.creeps[key].mem_move()
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
