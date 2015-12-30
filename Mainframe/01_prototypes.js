@@ -32,8 +32,11 @@ var has_attention = function(creepType, global) {
     //how many of them have this as their target
     if (creeps) {
         for (var key in creeps){
-            if (Game.getObjectById(creeps[key]).memory.target == this.id) {
-                attendants+=1;
+            creep = Game.getObjectById(creeps[key])
+            if (creep) {
+                if (creep.memory.target == this.id) {
+                    attendants+=1;
+                }
             }
         }
     }
@@ -45,6 +48,14 @@ var has_attention = function(creepType, global) {
 //////////
 
 Source.prototype.has_attention = has_attention
+
+Source.prototype.bootstrapExcavator = function() {
+    spawner.createCreep([WORK,MOVE], null, {role: "Excavator"});
+}
+
+Source.prototype.bootstrapMule = function() {
+    spawner.createCreep([CARRY,MOVE], null, {role: "Mule"});
+}
 
 ////////
 //Flag//
@@ -68,20 +79,47 @@ Creep.prototype.behavior = function() {
     req_behaviors.behavior[this.memory.role](this)
 }
 
-Creep.prototype.destination = function(destination){
-    if (destination){
-        if (destination.id){
-            this.memory.destination = destination.id;
-        } else {
-            this.memory.destination = destination;
-        }
-        return this.memory.destination
-    } else {
-        return this.memory.destination
-    }
+Creep.prototype.destination = function(destination) {
+    if (destination) this.memory.destination = (destination.id) ? destination.id : destination;
+    return this.memory.destination
+}
+
+Creep.prototype.working = function(working) {
+    //woah trippy
+    if (typeof working != 'undefined') this.memory.working = working
+    return this.memory.working
+}
+
+Creep.prototype.target = function(target) {
+    if (target) this.memory.target = (target.id) ? target.id : target;
+    var target = Game.getObjectById(this.memory.target)
+    return (target) ? target : null
+}
+
+Creep.prototype.target_release = function(target) {
+    this.memory.target = null
+    return this.memory.target
 }
 
 
+Creep.prototype.construct = function(object) {
+    var result = -1
+    if (this.pos.inRangeTo(object.pos, 3)) {
+        if (object.progressTotal) {
+            var result = this.build(object)
+        } else {
+            var result = this.repair(object)
+            //release worker if repair complete
+            if (object.hits == object.hitsMax) {
+                result = -1
+                this.target_release()
+            }
+        }
+    }
+    var working = (result == 0) ? true : false
+    this.working(working)
+    return result
+}
 
 Creep.prototype.get_energy_from = function(object) {
     if (this.pos.isNearTo(object)){

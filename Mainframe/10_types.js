@@ -1,12 +1,3 @@
-var miners = {};
-miners.role_name = "Miner";
-miners.template = {
-//PART: [ratio,max]
-    WORK:   [1,1],
-    CARRY:  [1,1],
-    MOVE:   [1,1],
-}
-
 var settlers = {};
 settlers.role_name = "Settler";
 settlers.template = {
@@ -60,5 +51,5 @@ scouts.template = {
 }
 
 //order is creation priority
-var creep_types = [miners, excavator, mules, janators, settlers, builders, guards, scouts]
+var creep_types = [excavator, mules, janators, settlers, builders, guards, scouts]
 exports.creep_types = creep_types

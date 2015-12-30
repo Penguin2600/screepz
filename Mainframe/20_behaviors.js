@@ -103,6 +103,7 @@ var get_nearest_energy = function(creep) {
     var obj = null
     var energy_sources = {}
     var starved = Memory.rooms[creep.room.name].energy_starved
+
     if (creep.carryCapacity > 0 && !starved) {
         var stored_filter = function(object) {return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))}
         obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: stored_filter})
@@ -128,59 +129,38 @@ var get_nearest_energy = function(creep) {
 //Prioritize spawn extensions and spawn over other buildings
 //TODO: dont do two finds when you could do one then filter
 var get_nearest_store = function(creep) {
-    var obj = null
+    var obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_spawn_extension}) ||
+        creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_other})                 ||
+        creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_structure})             ||
+        null
 
-    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_spawn_extension})
-    if (obj) return obj
-
-    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_other})
-    if (obj) return obj
-
-    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_structure})
-    if (obj) return obj
-
-    //nothing in this room can store energy right now
-    return null
+    return obj
 }
 
+//TODO: dont do two finds when you could do one then filter
 var builder = function(creep) {
 
-    if (!creep.memory.target || !Game.getObjectById(creep.memory.target)) {
-        var construction_sites = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-        creep.memory.target = construction_sites ? construction_sites.id : null
-    }
-    if (!creep.memory.target) {
-        var repair_sites = get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)
-        creep.memory.target = repair_sites ? repair_sites.id : null
+    if (!creep.target()) {
+        var construction_sites = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES) ||
+            get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)                   ||
+            null
+        creep.target((construction_sites) ? construction_sites.id : null)
     }
 
-    if (creep.memory.target) {
-        var target = Game.getObjectById(creep.memory.target)
-        var working = creep.memory.working
+    var target = creep.target()
 
+    if (target) {
         // we need energy
-        if (creep.carry.energy < creep.carryCapacity && !working) {
+        if (creep.carry.energy < creep.carryCapacity && !creep.working()) {
             var closest_source = get_nearest_energy(creep);
             if (closest_source) {
                 creep.destination(closest_source)
                 creep.get_energy_from(closest_source)
             }
-
         // we have energy
         } else {
-            var result = -1
             creep.destination(target)
-            if (target.progressTotal) {
-                result = creep.build(target)
-            } else {
-                result = creep.repair(target)
-                //repair complete release target
-                if (target.hits == target.hitsMax) {
-                    creep.memory.target = null;
-                    creep.memory.working=false
-                }
-            }
-            creep.memory.working = (result==0) ? true : false
+            creep.construct(target)
         }
     }
 }
@@ -230,7 +210,6 @@ var guard = function(creep) {
             var closest=get_flag_color(COLOR_BROWN, red.pos.roomName)[0].name.split("-")[0]
             var rally_count = red.name.match("\\d+")
             var count = red.has_attention("Guard", closest)
-            console.log(creep, closest, rally_count, count)
             if (count < rally_count && creep.room.name==closest) {
                 creep.memory.target = red.id
             }
@@ -249,23 +228,6 @@ var guard = function(creep) {
         if (target.color) {
             if (creep.pos.isNearTo(target)) {creep.memory.target=null;}
         }
-    }
-}
-
-var miner = function(creep, refresh) {
-
-    if (typeof(creep.memory.source) === 'undefined' || refresh) {
-        creep.memory.source = creep.pos.findClosestByRange(FIND_SOURCES).id;
-    }
-    if (creep.carry.energy < creep.carryCapacity) {
-        var closest_source = Game.getObjectById(creep.memory.source);
-        creep.destination(closest_source)
-        creep.harvest(closest_source)
-
-    } else {
-        var closest_store = get_nearest_store(creep)
-        creep.transfer(closest_store, RESOURCE_ENERGY);
-        creep.destination(closest_store)
     }
 }
 
@@ -406,12 +368,11 @@ var scout = function(creep) {
 }
 
 var behavior = {
-    "Miner": miner,
-    "Guard": guard,
-    "Builder": builder,
-    "Janator": janator,
     "Excavator": excavator,
     "Mule": mule,
+    "Janator": janator,
+    "Builder": builder,
+    "Guard": guard,
     "Scout": scout,
     "Settler": settler,
 }
