@@ -101,14 +101,17 @@ Creep.prototype.target_release = function(target) {
     return this.memory.target
 }
 
+Creep.prototype.needs_energy = function() {
+    return this.carry.energy < this.carryCapacity && !this.working()
+}
 
 Creep.prototype.construct = function(object) {
     var result = -1
     if (this.pos.inRangeTo(object.pos, 3)) {
         if (object.progressTotal) {
-            var result = this.build(object)
+            result = this.build(object)
         } else {
-            var result = this.repair(object)
+            result = this.repair(object)
             //release worker if repair complete
             if (object.hits == object.hitsMax) {
                 result = -1
@@ -116,8 +119,15 @@ Creep.prototype.construct = function(object) {
             }
         }
     }
-    var working = (result == 0) ? true : false
-    this.working(working)
+    return result
+}
+
+Creep.prototype.upgrade = function(object) {
+    var result = -1
+    if (this.pos.isNearTo(object)) {
+        result = this.upgradeController(object)
+        this.working((result == 0) ? true : false)
+    }
     return result
 }
 
