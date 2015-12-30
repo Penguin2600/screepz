@@ -66,7 +66,7 @@ var calc_creep_need = function (room_key) {
     creep_targets["Miner"] = 0 //Math.max((1 - Memory.rooms[room_key].creep_counts["Excavator"].length, 0))
     creep_targets["Guard"] = 2
     creep_targets["Builder"] = 1
-    creep_targets["Janator"] = Math.ceil(room.controller.pos.getRangeTo(room.controller.pos.findClosestByRange(FIND_MY_STRUCTURES,{filter: function(object) {return object.energyCapacity>200}}))/6)
+    creep_targets["Janator"] = (room) ? Math.ceil(room.controller.pos.getRangeTo(room.controller.pos.findClosestByRange(FIND_MY_STRUCTURES,{filter: function(object) {return object.energyCapacity>200}}))/6) : 0
     creep_targets["Excavator"] = Memory.rooms[room_key].sources.length
     creep_targets["Mule"] = creep_targets["Excavator"] + 1
     creep_targets["Scout"] = 0
@@ -87,6 +87,7 @@ var update_room_model = function() {
         Memory.rooms[key].needsRepair = get_repair_target(Memory.rooms[key].structures)
         Memory.rooms[key].creep_counts = get_creeps(key)
         Memory.rooms[key].creep_targets = calc_creep_need(key)
+        Memory.rooms[key].energy_starved = false
     }
 }
 
@@ -100,7 +101,11 @@ if (Game.time - Memory.sleep >= 10 || !Memory.creep_counts){
     update_room_model();
     req_utilities.garbage_collect();
     for (var key in Game.rooms) {
-        req_overseer.overseer(key);
+        result = req_overseer.overseer(key);
+        if (result == -6) {
+            Memory.rooms[key].energy_starved = true;
+            console.log("Room: "+key+" is starved :(")
+        }
     }
 
     //temporary?

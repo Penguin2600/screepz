@@ -50,7 +50,7 @@ guards.role_name = "Guard";
 guards.template = {
     TOUGH:   [1,5],
     ATTACK:  [1,5],
-    MOVE:    [1,5],
+    MOVE:    [1,10],
 }
 
 var scouts = {};

@@ -18,7 +18,7 @@ var createbody = function(creep_type, spawner){
     var available_energy = spawner.room.energyCapacityAvailable
     var base_creep_cost = 0
 
-    for (var key in template) { 
+    for (var key in template) {
         base_creep_cost += (bodyparts[key] * [template[key][0]])
     }
     //calculate maximum possible multiple of part ratio
@@ -29,7 +29,7 @@ var createbody = function(creep_type, spawner){
         //limit or max whichever is smaller
         var part_count = Math.min(template[key][1], maxSize*template[key][0])
         //add correct number of parts
-        for (i = 0; i < part_count; i++) { 
+        for (i = 0; i < part_count; i++) {
             body.push(key.toLowerCase())
         }
     }
@@ -65,15 +65,18 @@ var overseer = function(room_key) {
             {
                 var body = createbody(ctype, spawner)
                 var creep_name = ctype.role_name + "_" + Game.time
-                if (!spawner.spawning && spawner.canCreateCreep(body, creep_name) == OK) {
+                var result = spawner.canCreateCreep(body, creep_name)
+
+                if (!spawner.spawning && result==OK) {
                     var result = spawner.createCreep(body, creep_name, {role: ctype.role_name});
                     console.log("Overseer: Spawning "+result + " at " + spawner)
+                    return OK
                 }
-                //one at a time;
-                break;
+                return result;
             }
-        } 
+        }
     }
+    return OK
 }
 
 exports.overseer = overseer;

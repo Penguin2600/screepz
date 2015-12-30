@@ -9,10 +9,10 @@ var getCreepsOfRole = function(creepType, room) {
         //we have this in memory
         var creeps = Memory.rooms[room].creep_counts[creepType]
         return creeps
-    } 
+    }
 
     var creeps = []
-    for (key in Game.creeps) { 
+    for (key in Game.creeps) {
         if (Game.creeps[key].memory.role == creepType) {
             creeps.push(Game.creeps[key].id)
         }
@@ -106,7 +106,7 @@ Creep.prototype.mem_move = function() {
             this.memory.path = this.pos.findPathTo(dest, {maxOps: 200});
             //try harder
             if( !this.memory.path.length ) {
-                this.memory.path = this.pos.findPathTo(dest, {maxOps: 1000, ignoreCreeps: true});
+                this.memory.path = this.pos.findPathTo(dest, {maxOps: 200, ignoreCreeps: true});
                 this.say(this.memory.path.length)
             }
             this.memory.next_route=Math.max(Math.ceil(this.memory.path.length/2),5)

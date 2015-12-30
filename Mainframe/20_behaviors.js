@@ -1,3 +1,23 @@
+//Filters for find operations
+var stored_energy = function(object) {
+    return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))
+}
+var storage_spawn_extension = function(object) {
+    return ((object.energy < object.energyCapacity) && (object.structureType == STRUCTURE_EXTENSION || object.structureType == STRUCTURE_SPAWN))
+}
+var storage_other = function(object) {
+    return ((object.energy < object.energyCapacity))
+}
+var storage_structure = function(object) {
+    return ((object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
+}
+var storage_struct = function(object) {
+    return (object.structureType == STRUCTURE_STORAGE);
+}
+var needs_repair = function(object) {
+    return ((object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < Memory.wallHP)));
+}
+
 // get all rooms with a flag, or look for flag color in specific room
 var get_flag_color = function(color, roomName) {
     var flags = []
@@ -6,7 +26,7 @@ var get_flag_color = function(color, roomName) {
             if (roomName) {
                 if (Game.flags[key].pos.roomName == roomName) {
                     flags.push(Game.flags[key])
-                } 
+                }
             } else {
                 flags.push(Game.flags[key])
             }
@@ -14,7 +34,6 @@ var get_flag_color = function(color, roomName) {
     }
     return flags
 }
-exports.get_flag_color=get_flag_color
 
 var get_unoccupied_source = function(room_name){
     var sources = Game.rooms[room_name].find(FIND_SOURCES)
@@ -26,8 +45,6 @@ var get_unoccupied_source = function(room_name){
     }
 }
 
-exports.get_unoccupied_source=get_unoccupied_source
-
 var get_reciever = function(room_name, attendance_limit, reciever_type, slave_type){
 
     var recievers = Memory.rooms[room_name].creep_counts[reciever_type]
@@ -36,7 +53,7 @@ var get_reciever = function(room_name, attendance_limit, reciever_type, slave_ty
         for (var key in recievers){
             var reciever = Game.getObjectById(recievers[key])
             if (reciever){
-                var attendance = Game.getObjectById(recievers[key]).has_attention(slave_type) 
+                var attendance = Game.getObjectById(recievers[key]).has_attention(slave_type)
                 if (attendance < attendance_limit) {
                     return recievers[key]
                 }
@@ -44,7 +61,6 @@ var get_reciever = function(room_name, attendance_limit, reciever_type, slave_ty
         }
     }
 }
-exports.get_reciever=get_reciever
 
 var get_largest_resource = function(){
     var largest=0
@@ -60,9 +76,7 @@ var get_largest_resource = function(){
     }
     return result
 }
-exports.get_largest_resource=get_largest_resource
 
-//Get list of buildings and spawns able to store dank, spawn first then extensions
 var get_nearest_filter = function(creep, filter, type) {
     if (!type) {type=FIND_MY_STRUCTURES}
     var result = creep.pos.findClosestByRange(type, {
@@ -84,15 +98,12 @@ var get_nearest_filter = function(creep, filter, type) {
         return spawn;
     }
 }
-exports.get_nearest_filter=get_nearest_filter
-
 
 var get_nearest_energy = function(creep) {
     var obj = null
-    var energy_sources = {} 
-
-    if (creep.carryCapacity > 0) {
-
+    var energy_sources = {}
+    var starved = Memory.rooms[creep.room.name].energy_starved
+    if (creep.carryCapacity > 0 && !starved) {
         var stored_filter = function(object) {return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))}
         obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: stored_filter})
         if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj)
@@ -102,7 +113,7 @@ var get_nearest_energy = function(creep) {
         if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) - 5
     }
 
-    // if we can mine also return nearest source
+    // if we can mine also return nearest source, mining is also fine if we are starved.
     if (creep.getActiveBodyparts(WORK) > 0) {
         obj = creep.pos.findClosestByRange(FIND_SOURCES)
         // add 5 to make source energy a lot less tempting
@@ -114,30 +125,23 @@ var get_nearest_energy = function(creep) {
     return Game.getObjectById(closest)
 }
 
-var storage = function(object) {
-    return ((object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
-}
+//Prioritize spawn extensions and spawn over other buildings
+//TODO: dont do two finds when you could do one then filter
+var get_nearest_store = function(creep) {
+    var obj = null
 
-var storage_struct = function(object) {
-    return (object.structureType == STRUCTURE_STORAGE);
-}
+    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_spawn_extension})
+    if (obj) return obj
 
-var empty_extension = function(object) {
-    return ((object.structureType == STRUCTURE_EXTENSION && object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_LINK && object.energy < object.energyCapacity) || (object.structureType == STRUCTURE_TOWER && object.energy < object.energyCapacity));
-}
+    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_other})
+    if (obj) return obj
 
-var energy = function(object) {
-    return (object.energy > 0);
-}
+    obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_structure})
+    if (obj) return obj
 
-var needs_repair = function(object) {
-    return ((object.structureType != STRUCTURE_WALL && object.structureType != STRUCTURE_RAMPART && (object.hits < object.hitsMax)) || (object.structureType == STRUCTURE_RAMPART && (object.hits < Memory.wallHP)));
+    //nothing in this room can store energy right now
+    return null
 }
-
-var needs_improvement = function(object) {
-    return (object.structureType == STRUCTURE_RAMPART && (object.hits < 50000));
-}
-
 
 var builder = function(creep) {
 
@@ -207,21 +211,27 @@ var guard = function(creep) {
 
     var allies=["Eamnon", "MindsForge"]
 
-    if (!creep.memory.target || !Game.getObjectById(creep.memory.target)) {
+    if (!creep.memory.target || !Game.getObjectById(creep.memory.target))
+     {
+        creep.memory.target=null;
         var hostile = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-        if (allies.indexOf(hostile.owner.username) == -1 ) {
-            creep.memory.target = hostiles ? hostile.id : null
+        if (hostile) {
+            if (allies.indexOf(hostile.owner.username) == -1 ) {
+                creep.memory.priority_route = true
+                creep.memory.target = hostile ? hostile.id : null
+            }
         }
+        creep.memory.priority_route = false
     }
 
     if (!creep.memory.target) {
         var red = get_flag_color(COLOR_RED)[0]
         if (red) {
-            var closest=get_flag_color(COLOR_BROWN, red.pos.roomName).split("-")[0]
+            var closest=get_flag_color(COLOR_BROWN, red.pos.roomName)[0].name.split("-")[0]
             var rally_count = red.name.match("\\d+")
             var count = red.has_attention("Guard", closest)
-            console.log(closest, rally_count, count)
-            if (count < rally_count) {
+            console.log(creep, closest, rally_count, count)
+            if (count < rally_count && creep.room.name==closest) {
                 creep.memory.target = red.id
             }
         }
@@ -233,14 +243,12 @@ var guard = function(creep) {
     }
 
     var target = Game.getObjectById(creep.memory.target)
+
     if (target) {
-        creep.memory.priority_route=true;
         creep.destination(target)
-        creep.attack(target) 
-    } else {
-        creep.memory.priority_route=false;
-        //any red flags?
-        creep.destination(get_flag_color(COLOR_YELLOW, creep.room.name)[0])
+        if (target.color) {
+            if (creep.pos.isNearTo(target)) {creep.memory.target=null;}
+        }
     }
 }
 
@@ -255,7 +263,7 @@ var miner = function(creep, refresh) {
         creep.harvest(closest_source)
 
     } else {
-        var closest_store = get_nearest_filter(creep, storage)
+        var closest_store = get_nearest_store(creep)
         creep.transfer(closest_store, RESOURCE_ENERGY);
         creep.destination(closest_store)
     }
@@ -284,9 +292,9 @@ var settler = function(creep, refresh) {
                     creep.destination(closest_build)
                     creep.build(closest_build)
                 } else {
-                    var closest_store = get_nearest_filter(creep, storage)
+                    var closest_store = get_nearest_store(creep)
                     creep.transfer(closest_store, RESOURCE_ENERGY);
-                    creep.destination(closest_store)                    
+                    creep.destination(closest_store)
                 }
             }
         }
@@ -324,7 +332,7 @@ var mule_e = function(creep) {
             creep.destination(target)
             target.transferEnergy(creep)
         } else {
-            var deposit_target = get_nearest_filter(creep, empty_extension)
+            var deposit_target = get_nearest_store(creep)
             creep.destination(deposit_target)
             creep.transferEnergy(deposit_target)
         }
@@ -357,11 +365,11 @@ var mule = function(creep) {
 
         } else {
 
-            var deposit_target = get_nearest_filter(creep, storage) 
+            var deposit_target = get_nearest_store(creep)
             creep.destination(deposit_target)
             creep.transferEnergy(deposit_target)
         }
-        
+
     } else {
         mule_e(creep)
     }
