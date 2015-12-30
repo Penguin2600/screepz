@@ -104,9 +104,9 @@ if (Game.time - Memory.sleep >= 10 || !Memory.creep_counts){
     }
 
     //temporary?
-    //var linkFrom = Game.spawns.Mainframe.room.lookForAt('structure', 25, 19)[0];
-    //var linkTo = Game.spawns.Mainframe.room.lookForAt('structure', 43, 19)[0];
-    //linkFrom.transferEnergy(linkTo);
+    var linkFrom = Game.spawns.Mainframe.room.lookForAt('structure', 25, 19)[0];
+    var linkTo = Game.spawns.Mainframe.room.lookForAt('structure', 43, 19)[0];
+    linkFrom.transferEnergy(linkTo);
 
 }
 
@@ -124,30 +124,3 @@ for(var key in Game.creeps) {
         Game.creeps[key].mem_move()
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

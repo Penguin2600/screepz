@@ -10,7 +10,6 @@ miners.template = {
 var settlers = {};
 settlers.role_name = "Settler";
 settlers.template = {
-//PART: [ratio,max]
     WORK:   [1,5],
     CARRY:  [1,3],
     MOVE:   [2,5],
@@ -23,9 +22,9 @@ excavator.template = {
     MOVE:   [1,3],
 }
 
-var mule = {};
-mule.role_name = "Mule";
-mule.template = {
+var mules = {};
+mules.role_name = "Mule";
+mules.template = {
     CARRY:  [1,5],
     MOVE:   [1,5],
 }
@@ -41,9 +40,9 @@ builders.template = {
 var janators = {};
 janators.role_name = "Janator";
 janators.template = {
-    WORK:   [2,10],
+    WORK:   [2,15],
     CARRY:  [1,3],
-    MOVE:   [1,10],
+    MOVE:   [1,15],
 }
 
 var guards = {};
@@ -56,23 +55,10 @@ guards.template = {
 
 var scouts = {};
 scouts.role_name = "Scout";
-//scouts.body = [MOVE];
 scouts.template = {
     MOVE:    [1,1],
 }
 
 //order is creation priority
-var creep_types = [miners, excavator, mule, janators, settlers, builders, guards, scouts]
+var creep_types = [miners, excavator, mules, janators, settlers, builders, guards, scouts]
 exports.creep_types = creep_types
-
-// //Gather Energy
-// Mine->Resource (number of mines in room or adjacent flagged rooms)
-
-// Resource-> Spawn, Ext, Store, Link (number of mines in room or adjacent flagged rooms)
-// Storage -> Spawn, Ext, Link (number of storages)
-
-// //Build
-// Mine, Resource, Spawn, Ext, Link, Storage -> Build
-
-// //Feed
-// Mine, Resource, Spawn, Ext, Link, Storage -> Controller

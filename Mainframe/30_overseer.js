@@ -36,6 +36,10 @@ var createbody = function(creep_type, spawner){
     return body
 }
 
+var spawntime = function(body){
+    return body.length*3
+}
+
 //Get list of spawners able to create desired creep
 var get_spawners = function(room_key) {
     var available_spawners = []
@@ -48,26 +52,11 @@ var get_spawners = function(room_key) {
     return available_spawners
 }
 
-// //Get list of existing creeps
-// var get_creeps = function(room_key) {
-//     var creep_counts = {}
-//     for (var index in creep_types) {
-//         var ctype = creep_types[index];
-//         creep_counts[ctype.role_name] = [];
-//     }
-
-//     for (var name in Game.creeps) {
-//         var role = Game.creeps[name].memory.role;
-//         creep_counts[role].push(Game.creeps[name].id);
-//     }
-//     Memory.creep_counts = creep_counts
-//     return creep_counts
-// }
-
 //Manage colony population to config spec
 var overseer = function(room_key) {
     var creep_counts = Memory.rooms[room_key].creep_counts
     var creep_targets = Memory.rooms[room_key].creep_targets
+
     for (var index in creep_types) {
         var ctype = creep_types[index];
         if (creep_counts[ctype.role_name].length < creep_targets[ctype.role_name]) {

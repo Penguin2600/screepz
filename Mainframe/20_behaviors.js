@@ -105,8 +105,8 @@ var get_nearest_energy = function(creep) {
     // if we can mine also return nearest source
     if (creep.getActiveBodyparts(WORK) > 0) {
         obj = creep.pos.findClosestByRange(FIND_SOURCES)
-        // add 10 to make source energy a lot less tempting
-        if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) + 10
+        // add 5 to make source energy a lot less tempting
+        if (obj) energy_sources[obj.id] = creep.pos.getRangeTo(obj) + 5
     }
 
     var closest = Object.keys(energy_sources).sort(function(a,b){return energy_sources[a]-energy_sources[b]})[0]
@@ -203,15 +203,43 @@ var janator = function(creep) {
     creep.memory.working = (result==0) ? true : false
 }
 
-
 var guard = function(creep) {
-    var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+
+    var allies=["Eamnon", "MindsForge"]
+
+    if (!creep.memory.target || !Game.getObjectById(creep.memory.target)) {
+        var hostile = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        if (allies.indexOf(hostile.owner.username) == -1 ) {
+            creep.memory.target = hostiles ? hostile.id : null
+        }
+    }
+
+    if (!creep.memory.target) {
+        var red = get_flag_color(COLOR_RED)[0]
+        if (red) {
+            var closest=get_flag_color(COLOR_BROWN, red.pos.roomName).split("-")[0]
+            var rally_count = red.name.match("\\d+")
+            var count = red.has_attention("Guard", closest)
+            console.log(closest, rally_count, count)
+            if (count < rally_count) {
+                creep.memory.target = red.id
+            }
+        }
+    }
+
+    if (!creep.memory.target) {
+        var yellow = get_flag_color(COLOR_YELLOW, creep.room.name)[0]
+        creep.memory.target = yellow ? yellow.id : null
+    }
+
+    var target = Game.getObjectById(creep.memory.target)
     if (target) {
         creep.memory.priority_route=true;
         creep.destination(target)
         creep.attack(target) 
     } else {
         creep.memory.priority_route=false;
+        //any red flags?
         creep.destination(get_flag_color(COLOR_YELLOW, creep.room.name)[0])
     }
 }
@@ -345,9 +373,10 @@ var scout = function(creep) {
 
         //dont double up scouts
         var scouts = Memory.creep_counts["Scout"]
-        if (scouts) {
+        if (scouts.length) {
             var other_scouts=[]
             for (var key in scouts){
+                console.log(key)
                 other_scouts.push(Game.getObjectById(scouts[key]).destination())
             }
         }
@@ -380,4 +409,3 @@ var behavior = {
 }
 
 exports.behavior=behavior
-

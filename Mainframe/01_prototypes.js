@@ -1,13 +1,35 @@
 var req_behaviors = require('20_behaviors');
 var req_utilities = require('05_utilities');
 
-//////////
-//Source//
-//////////
 
-Source.prototype.has_attention = function(creepType) {
-    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
+var getCreepsOfRole = function(creepType, room) {
+
+    //get creeps we care about
+    if (room) {
+        //we have this in memory
+        var creeps = Memory.rooms[room].creep_counts[creepType]
+        return creeps
+    } 
+
+    var creeps = []
+    for (key in Game.creeps) { 
+        if (Game.creeps[key].memory.role == creepType) {
+            creeps.push(Game.creeps[key].id)
+        }
+    }
+
+    return creeps
+
+}
+
+var has_attention = function(creepType, global) {
+
     var attendants = 0
+
+    if (!global) var room = this.room.name
+    var creeps = getCreepsOfRole(creepType, room)
+
+    //how many of them have this as their target
     if (creeps) {
         for (var key in creeps){
             if (Game.getObjectById(creeps[key]).memory.target == this.id) {
@@ -17,28 +39,34 @@ Source.prototype.has_attention = function(creepType) {
     }
     return attendants;
 }
+
+//////////
+//Source//
+//////////
+
+Source.prototype.has_attention = has_attention
+
+////////
+//Flag//
+////////
+
+Flag.prototype.has_attention = has_attention
 
 /////////////
 //Structure//
 /////////////
 
-Structure.prototype.has_attention = function(creepType) {
-    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
-    var attendants = 0
-    if (creeps) {
-        for (var key in creeps){
-            if (Game.getObjectById(creeps[key]).memory.target == this.id) {
-                attendants+=1;
-            }
-        }
-    }
-    return attendants;
-}
-
+Structure.prototype.has_attention = has_attention
 
 /////////
 //Creep//
 /////////
+
+Creep.prototype.has_attention = has_attention
+
+Creep.prototype.behavior = function() {
+    req_behaviors.behavior[this.memory.role](this)
+}
 
 Creep.prototype.destination = function(destination){
     if (destination){
@@ -53,21 +81,7 @@ Creep.prototype.destination = function(destination){
     }
 }
 
-Creep.prototype.has_attention = function(creepType) {
-    var creeps = Memory.rooms[this.room.name].creep_counts[creepType]
-    var attendants = 0
-    if (creeps) {
-        for (var key in creeps){
-            var creep = Game.getObjectById(creeps[key])
-            if (creep) {
-                if (creep.memory.target == this.id) {
-                    attendants+=1;
-                }
-            }
-        }
-    }
-    return attendants;
-}
+
 
 Creep.prototype.get_energy_from = function(object) {
     if (this.pos.isNearTo(object)){
@@ -105,8 +119,4 @@ Creep.prototype.mem_move = function() {
         this.memory.last_route+=1;
         this.moveByPath(this.memory.path);
     }
-}
-
-Creep.prototype.behavior = function() {
-    req_behaviors.behavior[this.memory.role](this)
 }
