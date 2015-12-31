@@ -5,8 +5,11 @@ var stored_energy = function(object) {
 var storage_spawn_extension = function(object) {
     return ((object.energy < object.energyCapacity) && (object.structureType == STRUCTURE_EXTENSION || object.structureType == STRUCTURE_SPAWN))
 }
+var transmitters = function(object) {
+    return (object.structureType == STRUCTURE_LINK && object.transmitter() && (object.energy < object.energyCapacity))
+}
 var storage_other = function(object) {
-    return ((object.energy < object.energyCapacity))
+    return ((object.energy < object.energyCapacity) && object.structureType != STRUCTURE_LINK)
 }
 var storage_structure = function(object) {
     return ((object.structureType == STRUCTURE_STORAGE && object.store.energy < object.storeCapacity));
@@ -126,6 +129,7 @@ var get_nearest_energy = function(creep) {
 //TODO: dont do two finds when you could do one then filter
 var get_nearest_store = function(creep, no_storage) {
     var obj = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_spawn_extension}) ||
+        creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: transmitters})                  ||
         creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_other})                 ||
         creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {filter: storage_structure})             ||
         null
@@ -147,8 +151,8 @@ var excavator = function(creep, refresh) {
 var mule = function(creep) {
     if (!creep.target()) {
         var targets = get_reciever(creep.room.name,1,"Excavator","Mule") ||
-            get_largest_resource(creep, 500)
-            get_nearest_filter(creep, storage_struct)
+            get_largest_resource(creep, 500)                             ||
+            get_nearest_filter(creep, storage_struct)                    ||
             null
         creep.target((targets) ? targets.id : null)
     }
@@ -164,11 +168,12 @@ var mule = function(creep) {
             }   else {
                 creep.withdrawal(target)
             }
-
         } else {
             var deposit_target = get_nearest_store(creep)
             creep.destination(deposit_target)
             creep.deposit(deposit_target)
+            //re-evaluate target after dropoff
+            if (creep.carry.energy <=0) creep.target_release()
         }
     }
 }

@@ -8,6 +8,7 @@ var creep_types = req_types.creep_types;
 if (!Memory.registry) {
     Memory.registry={}
     Memory.registry.sleep = Game.time
+    Memory.registry.transmitters = []
     Memory.rooms={}
 }
 

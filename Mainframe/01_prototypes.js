@@ -61,12 +61,12 @@ Flag.prototype.has_attention = has_attention
 
 Structure.prototype.has_attention = has_attention
 
-// Structure.prototype.transmitter = function() {
-//     if (Memory.registry.transmitters.indexOf(this.id) !=-1) {
-//         return true
-//     }
-//     return false
-// }
+Structure.prototype.transmitter = function() {
+    if (Memory.registry.transmitters.indexOf(this.id) !=-1) {
+        return true
+    }
+    return false
+}
 
 /////////
 //Creep//
@@ -76,6 +76,11 @@ Creep.prototype.has_attention = has_attention
 
 Creep.prototype.behavior = function() {
     req_behaviors.behavior[this.memory.role](this)
+}
+
+Creep.prototype.role = function(role) {
+    if (role) this.memory.role = role;
+    return this.memory.role
 }
 
 Creep.prototype.destination = function(destination) {
@@ -91,6 +96,11 @@ Creep.prototype.working = function(working) {
 Creep.prototype.has_load = function(loaded) {
     if (typeof loaded != 'undefined') this.memory.has_load = loaded
     if (typeof this.memory.has_load == 'undefined') this.memory.has_load = false;
+    //if mule cycle target on load change
+    // if (this.memory.role == "Mule") {
+    //     this.target_release()
+    //     this.say("new targ")
+    // }
     return this.memory.has_load
 }
 
@@ -176,7 +186,7 @@ Creep.prototype.mem_move = function() {
                 this.memory.path = this.pos.findPathTo(dest, {maxOps: 200, ignoreCreeps: true});
                 this.say(this.memory.path.length)
             }
-            this.memory.next_route=Math.max(Math.ceil(this.memory.path.length/2),5)
+            this.memory.next_route=Math.max(Math.ceil(this.memory.path.length*(3/4)),5)
         }
     } else {
         this.memory.path = null
@@ -188,6 +198,9 @@ Creep.prototype.mem_move = function() {
     }
 }
 
+/////////
+//Spawn//
+/////////
 
 Spawn.prototype.bootstrapExcavator = function() {
     this.createCreep([WORK,MOVE], null, {role: "Excavator"});
