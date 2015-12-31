@@ -49,14 +49,6 @@ var has_attention = function(creepType, global) {
 
 Source.prototype.has_attention = has_attention
 
-Source.prototype.bootstrapExcavator = function() {
-    spawner.createCreep([WORK,MOVE], null, {role: "Excavator"});
-}
-
-Source.prototype.bootstrapMule = function() {
-    spawner.createCreep([CARRY,MOVE], null, {role: "Mule"});
-}
-
 ////////
 //Flag//
 ////////
@@ -68,6 +60,13 @@ Flag.prototype.has_attention = has_attention
 /////////////
 
 Structure.prototype.has_attention = has_attention
+
+// Structure.prototype.transmitter = function() {
+//     if (Memory.registry.transmitters.indexOf(this.id) !=-1) {
+//         return true
+//     }
+//     return false
+// }
 
 /////////
 //Creep//
@@ -85,9 +84,14 @@ Creep.prototype.destination = function(destination) {
 }
 
 Creep.prototype.working = function(working) {
-    //woah trippy
     if (typeof working != 'undefined') this.memory.working = working
     return this.memory.working
+}
+
+Creep.prototype.has_load = function(loaded) {
+    if (typeof loaded != 'undefined') this.memory.has_load = loaded
+    if (typeof this.memory.has_load == 'undefined') this.memory.has_load = false;
+    return this.memory.has_load
 }
 
 Creep.prototype.target = function(target) {
@@ -102,7 +106,7 @@ Creep.prototype.target_release = function(target) {
 }
 
 Creep.prototype.needs_energy = function() {
-    return this.carry.energy < this.carryCapacity && !this.working()
+    return !this.has_load()
 }
 
 Creep.prototype.construct = function(object) {
@@ -119,6 +123,8 @@ Creep.prototype.construct = function(object) {
             }
         }
     }
+    if (this.carry.energy == 0) this.has_load(false);
+    this.working((result == 0) ? true : false)
     return result
 }
 
@@ -127,11 +133,23 @@ Creep.prototype.upgrade = function(object) {
     if (this.pos.isNearTo(object)) {
         result = this.upgradeController(object)
         this.working((result == 0) ? true : false)
+        if (this.carry.energy == 0) this.has_load(false);
     }
     return result
 }
 
-Creep.prototype.get_energy_from = function(object) {
+//use to make any deposit
+Creep.prototype.deposit = function(object) {
+    var result = -1
+    if (this.pos.isNearTo(object)) {
+        this.transferEnergy(object)
+        if (this.carry.energy == 0) this.has_load(false);
+    }
+    return result
+}
+
+//use to make any withdrawl
+Creep.prototype.withdrawal = function(object) {
     if (this.pos.isNearTo(object)){
         if (object.structureType) {
             object.transferEnergy(this)
@@ -141,6 +159,7 @@ Creep.prototype.get_energy_from = function(object) {
             this.harvest(object)
         }
     }
+    if (this.carry.energy == this.carryCapacity) this.has_load(true);
 }
 
 Creep.prototype.mem_move = function() {
@@ -167,4 +186,13 @@ Creep.prototype.mem_move = function() {
         this.memory.last_route+=1;
         this.moveByPath(this.memory.path);
     }
+}
+
+
+Spawn.prototype.bootstrapExcavator = function() {
+    this.createCreep([WORK,MOVE], null, {role: "Excavator"});
+}
+
+Spawn.prototype.bootstrapMule = function() {
+    this.createCreep([CARRY,MOVE], null, {role: "Mule"});
 }
