@@ -1,29 +1,21 @@
 var req_utilities = require('05_utilities');
 var req_types = require('10_types');
 var creep_types = req_types.creep_types;
-
-var bodyparts = {
-    TOUGH: 10,
-    CARRY: 50,
-    MOVE: 50,
-    ATTACK: 80,
-    WORK: 100,
-    RANGED_ATTACK: 150,
-    HEAL: 250,
-}
+var bodyparts = req_types.bodyparts;
 
 var createbody = function(creep_type, spawner){
 
     var template = creep_type.template
     var available_energy = spawner.room.energyCapacityAvailable
     var base_creep_cost = 0
+    var body=[]
 
     for (var key in template) {
+        //total = bodypart cost * bodypart count
         base_creep_cost += (bodyparts[key] * [template[key][0]])
     }
     //calculate maximum possible multiple of part ratio
     var maxSize = Math.floor(available_energy/base_creep_cost)
-    var body=[]
 
     for (var key in template) {
         //limit or max whichever is smaller

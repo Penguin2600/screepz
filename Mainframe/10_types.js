@@ -16,16 +16,17 @@ excavator.template = {
 var mules = {};
 mules.role_name = "Mule";
 mules.template = {
-    CARRY:  [1,5],
-    MOVE:   [1,5],
+    WORK:   [1,1],
+    CARRY:  [1,8],
+    MOVE:   [1,8],
 }
 
 var builders = {};
 builders.role_name = "Builder";
 builders.template = {
-    WORK:   [1,4],
-    CARRY:  [1,1],
-    MOVE:   [1,4],
+    WORK:   [1,5],
+    CARRY:  [1,4],
+    MOVE:   [1,5],
 }
 
 var janators = {};
@@ -40,8 +41,8 @@ var guards = {};
 guards.role_name = "Guard";
 guards.template = {
     TOUGH:   [1,5],
-    ATTACK:  [1,5],
     MOVE:    [1,10],
+    ATTACK:  [1,5],
 }
 
 var scouts = {};
@@ -53,3 +54,15 @@ scouts.template = {
 //order is creation priority
 var creep_types = [excavator, mules, janators, settlers, builders, guards, scouts]
 exports.creep_types = creep_types
+
+
+var bodyparts = {
+    TOUGH: 10,
+    CARRY: 50,
+    MOVE: 50,
+    ATTACK: 80,
+    WORK: 100,
+    RANGED_ATTACK: 150,
+    HEAL: 250,
+}
+exports.bodyparts = bodyparts

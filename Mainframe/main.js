@@ -25,7 +25,7 @@ var get_repair_target = function(structures) {
         var structure = Game.getObjectById(structures[key])
         //calculate most need
         if ((structure.structureType == STRUCTURE_RAMPART) || (structure.structureType == STRUCTURE_WALL)) {
-            pct = (structure.hits/Memory.wallHP)
+            pct = (structure.hits/Memory.rooms[structure.room.name].wallHP)
         } else {
             pct = (structure.hits/structure.hitsMax)
         }
@@ -77,19 +77,21 @@ var calc_creep_need = function (room_key) {
 
 var update_room_model = function() {
     for (var key in Game.rooms) {
-
-        // only once
-        if (!Memory.rooms[key])                 Memory.rooms[key] = {}
-        if (!Memory.rooms[key].sources)         Memory.rooms[key].sources = Game.rooms[key].find(FIND_SOURCES).map(get_obj_id)
-        if (!Memory.rooms[key].creep_targets)   Memory.rooms[key].creep_targets = calc_creep_need(key)
-
         // every time
         Memory.rooms[key].flags = Game.rooms[key].find(FIND_FLAGS).map(get_obj_id)
         Memory.rooms[key].structures = Game.rooms[key].find(FIND_STRUCTURES).map(get_obj_id)
+        Memory.rooms[key].has_spawn = Game.rooms[key].find(FIND_MY_SPAWNS).length
         Memory.rooms[key].tower = Game.rooms[key].find(FIND_MY_STRUCTURES, {filter: { structureType: STRUCTURE_TOWER }}).map(get_obj_id)
         Memory.rooms[key].needsRepair = get_repair_target(Memory.rooms[key].structures)
         Memory.rooms[key].creep_counts = get_creeps(key)
         Memory.rooms[key].energy_starved = false
+
+        // only once
+        if (!Memory.rooms[key])                 Memory.rooms[key] = {}
+        if (!Memory.rooms[key].sources)         Memory.rooms[key].sources = Game.rooms[key].find(FIND_SOURCES).map(get_obj_id)
+        if (!Memory.rooms[key].creep_targets && Memory.rooms[key].has_spawn) Memory.rooms[key].creep_targets = calc_creep_need(key)
+        if (!Memory.rooms[key].wallHP)          Memory.rooms[key].wallHP = 1000
+
     }
 }
 
@@ -106,26 +108,33 @@ if (Game.time - Memory.registry.sleep >= 10){
     req_utilities.garbage_collect();
 
     for (var key in Game.rooms) {
-        result = req_overseer.overseer(key);
-        if (result == -6) {
-            Memory.rooms[key].energy_starved = true;
-            console.log("Room: "+key+" is starved :(")
+        if (Memory.rooms[key].has_spawn) {
+            result = req_overseer.overseer(key);
+            if (result == -6) {
+                Memory.rooms[key].energy_starved = true;
+                console.log("Room: "+key+" is starved :(")
+            }
         }
     }
 
     //temporary
-    //TODO: specify transmit and recieve links somehow -- flags?
     var linkFrom = Game.spawns.Mainframe.room.lookForAt('structure', 25, 19)[0];
     var linkTo = Game.spawns.Mainframe.room.lookForAt('structure', 43, 19)[0];
+    if (linkFrom && linkTo) linkFrom.transferEnergy(linkTo);
+
+    linkFrom = Game.getObjectById('56871f5ff533b78531bf1bfa')
+    linkTo = Game.getObjectById('5687536047eb856835db16fc')
     if (linkFrom && linkTo) linkFrom.transferEnergy(linkTo);
 
 }
 
 //per room per tick activities
 for (var key in Memory.rooms) {
-    var tower = Game.getObjectById(Memory.rooms[key].tower)
-    if (tower) {
-        tower.repair(Game.getObjectById(Memory.rooms[key].needsRepair))
+    if (Game.rooms[key] && Memory.rooms[key].has_spawn) {
+        var tower = Game.getObjectById(Memory.rooms[key].tower)
+        if (tower) {
+            tower.repair(Game.getObjectById(Memory.rooms[key].needsRepair))
+        }
     }
 }
 

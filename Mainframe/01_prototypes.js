@@ -96,11 +96,6 @@ Creep.prototype.working = function(working) {
 Creep.prototype.has_load = function(loaded) {
     if (typeof loaded != 'undefined') this.memory.has_load = loaded
     if (typeof this.memory.has_load == 'undefined') this.memory.has_load = false;
-    //if mule cycle target on load change
-    // if (this.memory.role == "Mule") {
-    //     this.target_release()
-    //     this.say("new targ")
-    // }
     return this.memory.has_load
 }
 
@@ -127,7 +122,9 @@ Creep.prototype.construct = function(object) {
         } else {
             result = this.repair(object)
             //release worker if repair complete
-            if (object.hits == object.hitsMax) {
+            if (object.hits == object.hitsMax || 
+                (object.structureType==STRUCTURE_WALL    && object.hits >= Memory.rooms[object.room.name].wallHP) ||
+                (object.structureType==STRUCTURE_RAMPART && object.hits >= Memory.rooms[object.room.name].wallHP)) {
                 result = -1
                 this.target_release()
             }
