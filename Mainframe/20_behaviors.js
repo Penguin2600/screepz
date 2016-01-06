@@ -1,3 +1,6 @@
+var req_utilities = require('05_utilities');
+var get_flags = req_utilities.get_flags;
+
 //Filters for find operations
 var stored_energy = function(object) {
     return ((object.energy > 10) || (object.structureType == STRUCTURE_STORAGE && object.store.energy > 10))
@@ -24,45 +27,11 @@ var needs_repair = function(object) {
             );
 }
 
-// get all rooms with a flag, or look for flag color in specific room
-var get_flag_color = function(color, roomName) {
-    var flags = []
-    for (var key in Game.flags) {
-        if (Game.flags[key].color==color) {
-            if (roomName) {
-                if (Game.flags[key].pos.roomName == roomName) {
-                    flags.push(Game.flags[key])
-                }
-            } else {
-                flags.push(Game.flags[key])
-            }
-        }
-    }
-    return flags
-}
-
-// get all rooms with a flag, or look for flag color in specific room
-var get_flag_name = function(name, roomName) {
-    var flags = []
-    for (var key in Game.flags) {
-        if (Game.flags[key].name==name) {
-            if (roomName) {
-                if (Game.flags[key].pos.roomName == roomName) {
-                    flags.push(Game.flags[key])
-                }
-            } else {
-                flags.push(Game.flags[key])
-            }
-        }
-    }
-    return flags
-}
-
 var get_unoccupied_source = function(room_name){
     var sources = Game.rooms[room_name].find(FIND_SOURCES)
     for (var key1 in sources){
         //unoccupied and in a room marked for excavation
-        if (!sources[key1].has_attention("Excavator") && get_flag_color(COLOR_CYAN,sources[key1].room.name).length>=1) {
+        if (!sources[key1].has_attention("Excavator") && get_flags("color", COLOR_CYAN,sources[key1].room.name).length>=1) {
             return sources[key1].id
         }
     }
@@ -259,9 +228,9 @@ var guard = function(creep) {
     }
 
     if (!creep.memory.target) {
-        var red = get_flag_color(COLOR_RED)[0]
+        var red = get_flags("color", COLOR_RED)[0]
         if (red) {
-            var closest=get_flag_color(COLOR_BROWN, red.pos.roomName)[0].name.split("-")[0]
+            var closest=get_flags("color", COLOR_BROWN, red.pos.roomName)[0].name.split("-")[0]
             var rally_count = red.name.match("\\d+")
             var count = red.has_attention("Guard", closest)
             if (count < rally_count && creep.room.name==closest) {
@@ -271,7 +240,7 @@ var guard = function(creep) {
     }
 
     if (!creep.memory.target) {
-        var yellow = get_flag_color(COLOR_YELLOW, creep.room.name)[0]
+        var yellow = get_flags("color", COLOR_YELLOW, creep.room.name)[0]
         creep.memory.target = yellow ? yellow.id : null
     }
 
@@ -289,7 +258,7 @@ var guard = function(creep) {
 
 var settler = function(creep, refresh) {
 
-    var settlement = (get_flag_color(COLOR_ORANGE)[0])
+    var settlement = (get_flags("color", COLOR_ORANGE)[0])
     //if at settlement
     if (creep.room.name == settlement.pos.roomName) {
         var closest_build = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
@@ -336,7 +305,7 @@ var scout = function(creep) {
             }
         }
         //GET ROOMS TAGED FOR SCOUTING
-        var flagged = get_flag_color(COLOR_GREY)
+        var flagged = get_flags("color", COLOR_GREY)
         for (var key in flagged){
             // if there are no friendly units in that room get flag as target
             if (!Game.rooms[flagged[key].pos.roomName]) {

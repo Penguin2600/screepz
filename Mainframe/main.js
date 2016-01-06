@@ -1,6 +1,10 @@
 var req_prototypes = require('01_prototypes')
+
 var req_utilities = require('05_utilities');
+var get_flags = req_utilities.get_flags;
+
 var req_overseer = require('30_overseer');
+
 var req_types = require('10_types');
 var creep_types = req_types.creep_types;
 
@@ -10,6 +14,7 @@ if (!Memory.registry) {
     Memory.registry.sleep = Game.time
     Memory.registry.transmitters = []
     Memory.rooms={}
+    Memory.sectors={}
 }
 
 var get_obj_id = function(obj) {
@@ -72,15 +77,14 @@ var calc_creep_need = function (room_key) {
     creep_targets["Settler"] = 0
 
     return creep_targets
-
 }
 
-var update_room_model = function() {
+var update_model = function() {
     for (var key in Game.rooms) {
         // every time
         Memory.rooms[key].flags = Game.rooms[key].find(FIND_FLAGS).map(get_obj_id)
-        Memory.rooms[key].structures = Game.rooms[key].find(FIND_STRUCTURES).map(get_obj_id)
-        Memory.rooms[key].has_spawn = Game.rooms[key].find(FIND_MY_SPAWNS).length
+        Memory.rooms[key].spawns = Game.rooms[key].find(FIND_MY_SPAWNS)
+        Memory.rooms[key].has_spawn = Memory.rooms[key].spawns.length
         Memory.rooms[key].tower = Game.rooms[key].find(FIND_MY_STRUCTURES, {filter: { structureType: STRUCTURE_TOWER }}).map(get_obj_id)
         Memory.rooms[key].needsRepair = get_repair_target(Memory.rooms[key].structures)
         Memory.rooms[key].creep_counts = get_creeps(key)
@@ -91,7 +95,6 @@ var update_room_model = function() {
         if (!Memory.rooms[key].sources)         Memory.rooms[key].sources = Game.rooms[key].find(FIND_SOURCES).map(get_obj_id)
         if (!Memory.rooms[key].creep_targets && Memory.rooms[key].has_spawn) Memory.rooms[key].creep_targets = calc_creep_need(key)
         if (!Memory.rooms[key].wallHP)          Memory.rooms[key].wallHP = 1000
-
     }
 }
 
@@ -99,12 +102,15 @@ var update_room_model = function() {
 //MAIN GAME LOOP
 module.exports.loop = function () {
 
+// var start=req_utilities.start_profile("derp",0)
+// req_utilities.end_profile(start)
+
 //Every 10 Ticks
 if (Game.time - Memory.registry.sleep >= 10){
     Memory.registry.sleep = Game.time
 
     //ALWAYS GC BEFORE SPAWNING OR THE BABIES COME OUT TARDED
-    update_room_model();
+    update_model();
     req_utilities.garbage_collect();
 
     for (var key in Game.rooms) {
@@ -127,7 +133,6 @@ if (Game.time - Memory.registry.sleep >= 10){
     if (linkFrom && linkTo) linkFrom.transferEnergy(linkTo);
 
 }
-
 //per room per tick activities
 for (var key in Memory.rooms) {
     if (Game.rooms[key] && Memory.rooms[key].has_spawn) {

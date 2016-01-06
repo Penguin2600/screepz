@@ -16,7 +16,6 @@ excavator.template = {
 var mules = {};
 mules.role_name = "Mule";
 mules.template = {
-    WORK:   [1,1],
     CARRY:  [1,8],
     MOVE:   [1,8],
 }
