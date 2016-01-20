@@ -31,7 +31,7 @@ var get_unoccupied_source = function(room_name){
     var sources = Game.rooms[room_name].find(FIND_SOURCES)
     for (var key1 in sources){
         //unoccupied and in a room marked for excavation
-        if (!sources[key1].has_attention("Excavator") && get_flags("color", COLOR_CYAN,sources[key1].room.name).length>=1) {
+        if (!sources[key1].has_attention("Excavator")) {
             return sources[key1].id
         }
     }
@@ -40,7 +40,6 @@ var get_unoccupied_source = function(room_name){
 var get_reciever = function(room_name, attendance_limit, reciever_type, slave_type){
 
     var recievers = Memory.rooms[room_name].creep_counts[reciever_type]
-
     if (recievers) {
         for (var key in recievers){
             var reciever = Game.getObjectById(recievers[key])
@@ -256,69 +255,40 @@ var guard = function(creep) {
     }
 }
 
-var settler = function(creep, refresh) {
-
+var settler = function(creep) {
     var settlement = (get_flags("color", COLOR_ORANGE)[0])
-    //if at settlement
     if (creep.room.name == settlement.pos.roomName) {
-        var closest_build = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-        creep.memory.source = creep.pos.findClosestByRange(FIND_SOURCES).id;
+        if (!creep.target()) {
+            var new_target = creep.pos.findClosestByRange(FIND_STRUCTURES, 
+                    {filter: function(object) {return object.structureType==STRUCTURE_CONTROLLER && object.level ==  0}}) ||
+                creep.pos.findClosestByRange(FIND_STRUCTURES, 
+                    {filter: function(object) {return object.structureType==STRUCTURE_CONTROLLER && object.ticksToDowngrade < 1000 }}) ||
+                creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)     ||
+                get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)  ||
+                null
+            creep.target((new_target) ? new_target.id : null)
+        }
 
-        if (creep.carry.energy ==0 || (creep.carry.energy < creep.carryCapacity && !creep.pos.isNearTo(closest_build))) {
-            var closest_source = Game.getObjectById(creep.memory.source);
-            creep.destination(closest_source)
-            creep.harvest(closest_source)
-
-        } else {
-            if (creep.room.controller.ticksToDowngrade < 15000) {
-                creep.destination(creep.room.controller)
-                creep.upgradeController(creep.room.controller)
-            } else {
-                var closest_build = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-                if (closest_build) {
-                    creep.destination(closest_build)
-                    creep.build(closest_build)
-                } else {
-                    var closest_store = get_nearest_store(creep)
-                    creep.transfer(closest_store, RESOURCE_ENERGY);
-                    creep.destination(closest_store)
+        var target = creep.target()
+        if (target) {
+            if (creep.needs_energy()) {
+                var closest_source = get_nearest_energy(creep);
+                if (closest_source) {
+                    creep.destination(closest_source)
+                    creep.withdrawal(closest_source)
                 }
+            } else {
+                creep.destination(target)
+                creep.construct(target)
             }
         }
     } else {
         creep.destination(settlement)
     }
-
 }
 
 var scout = function(creep) {
-    //find a source which doesnt already have an excavator
-    if (!creep.destination()) {
-
-        //dont double up scouts
-        var scouts = Memory.creep_counts["Scout"]
-        if (scouts.length) {
-            var other_scouts=[]
-            for (var key in scouts){
-                console.log(key)
-                other_scouts.push(Game.getObjectById(scouts[key]).destination())
-            }
-        }
-        //GET ROOMS TAGED FOR SCOUTING
-        var flagged = get_flags("color", COLOR_GREY)
-        for (var key in flagged){
-            // if there are no friendly units in that room get flag as target
-            if (!Game.rooms[flagged[key].pos.roomName]) {
-                // if no other scouts own that room
-                if (!other_scouts){
-                    creep.destination(flagged[key])
-                }
-                else if (other_scouts.indexOf(flagged[key].id) == -1) {
-                    creep.destination(flagged[key])
-                }
-            }
-        }
-    }
+    if (!creep.target()) {}
 }
 
 var behavior = {

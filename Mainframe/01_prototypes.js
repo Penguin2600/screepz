@@ -117,8 +117,23 @@ Creep.prototype.needs_energy = function() {
 Creep.prototype.construct = function(object) {
     var result = -1
     if (this.pos.inRangeTo(object.pos, 3)) {
-        if (object.progressTotal) {
+        //Controller
+        if (object.structureType==STRUCTURE_CONTROLLER) {
+            console.log('yep')
+            if (object.level==0) {
+                result = this.claimController(object)
+                result = -1
+                this.target_release()
+            } else {
+                result = this.upgradeController(object)
+                result = -1
+                this.target_release()
+            }
+            console.log(result)
+        //Construction Site
+        } else if (object.progressTotal) {
             result = this.build(object)
+        //Repair
         } else {
             result = this.repair(object)
             //release worker if repair complete
@@ -200,9 +215,9 @@ Creep.prototype.mem_move = function() {
 /////////
 
 Spawn.prototype.bootstrapExcavator = function() {
-    this.createCreep([WORK,MOVE], null, {role: "Excavator"});
+    return this.createCreep([WORK,MOVE], null, {role: "Excavator"});
 }
 
 Spawn.prototype.bootstrapMule = function() {
-    this.createCreep([CARRY,MOVE], null, {role: "Mule"});
+    return this.createCreep([CARRY,MOVE], null, {role: "Mule"});
 }

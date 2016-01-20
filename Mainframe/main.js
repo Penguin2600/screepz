@@ -29,15 +29,20 @@ var get_repair_target = function(structures) {
     for (var key in structures) {
         var structure = Game.getObjectById(structures[key])
         //calculate most need
-        if ((structure.structureType == STRUCTURE_RAMPART) || (structure.structureType == STRUCTURE_WALL)) {
-            pct = (structure.hits/Memory.rooms[structure.room.name].wallHP)
-        } else {
-            pct = (structure.hits/structure.hitsMax)
-        }
+        if (structure) {
+            if ((structure.structureType == STRUCTURE_RAMPART) || (structure.structureType == STRUCTURE_WALL)) {
+                pct = (structure.hits/Memory.rooms[structure.room.name].wallHP)
+            } else {
+                pct = (structure.hits/structure.hitsMax)
+            }
 
-        if (pct < most_need) {
-            most_need = pct;
-            struct_need = structure.id
+            if (pct < most_need) {
+                most_need = pct;
+                struct_need = structure.id
+            }
+        } else {
+            
+            console.log(structures[key])
         }
 
     }
@@ -81,17 +86,21 @@ var calc_creep_need = function (room_key) {
 
 var update_model = function() {
     for (var key in Game.rooms) {
+
+        // only once
+        if (!Memory.rooms[key])                 Memory.rooms[key] = {}
+        
         // every time
         Memory.rooms[key].flags = Game.rooms[key].find(FIND_FLAGS).map(get_obj_id)
         Memory.rooms[key].spawns = Game.rooms[key].find(FIND_MY_SPAWNS)
         Memory.rooms[key].has_spawn = Memory.rooms[key].spawns.length
+        Memory.rooms[key].structures = Game.rooms[key].find(FIND_STRUCTURES).map(get_obj_id)
         Memory.rooms[key].tower = Game.rooms[key].find(FIND_MY_STRUCTURES, {filter: { structureType: STRUCTURE_TOWER }}).map(get_obj_id)
         Memory.rooms[key].needsRepair = get_repair_target(Memory.rooms[key].structures)
         Memory.rooms[key].creep_counts = get_creeps(key)
         Memory.rooms[key].energy_starved = false
 
-        // only once
-        if (!Memory.rooms[key])                 Memory.rooms[key] = {}
+
         if (!Memory.rooms[key].sources)         Memory.rooms[key].sources = Game.rooms[key].find(FIND_SOURCES).map(get_obj_id)
         if (!Memory.rooms[key].creep_targets && Memory.rooms[key].has_spawn) Memory.rooms[key].creep_targets = calc_creep_need(key)
         if (!Memory.rooms[key].wallHP)          Memory.rooms[key].wallHP = 1000
