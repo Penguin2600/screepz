@@ -172,7 +172,7 @@ var mule = function(creep) {
 var builder = function(creep) {
     if (!creep.target()) {
         var construction_sites = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES) ||
-            get_nearest_filter(creep, needs_repair, FIND_STRUCTURES)                   ||
+            get_nearest_filter(creep, needs_repair, true, FIND_STRUCTURES)             ||
             null
         creep.target((construction_sites) ? construction_sites.id : null)
     }

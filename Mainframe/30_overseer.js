@@ -3,10 +3,10 @@ var req_types = require('10_types');
 var creep_types = req_types.creep_types;
 var bodyparts = req_types.bodyparts;
 
-var createbody = function(creep_type, spawner){
+var createbody = function(creep_type, room_key){
 
     var template = creep_type.template
-    var available_energy = spawner.room.energyCapacityAvailable
+    var available_energy = Game.rooms[room_key].energyCapacityAvailable
     var base_creep_cost = 0
     var body=[]
 
@@ -36,7 +36,7 @@ var spawntime = function(body){
 var get_spawners = function(room_key) {
     var available_spawners = []
     for (var key in Game.spawns) {
-        if (Game.spawns[key].room.name == room_key) {
+        if (Game.spawns[key].room.name == room_key && !Game.spawns[key].spawning) {
             available_spawners.push(Game.spawns[key].id);
         }
     }
@@ -55,7 +55,7 @@ var overseer = function(room_key) {
             var spawner = Game.getObjectById(get_spawners(room_key)[0])
             if (spawner)
             {
-                var body = createbody(ctype, spawner)
+                var body = createbody(ctype, room_key)
                 var creep_name = ctype.role_name + "_" + Game.time
                 var result = spawner.canCreateCreep(body, creep_name)
 

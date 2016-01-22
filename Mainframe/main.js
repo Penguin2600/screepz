@@ -85,6 +85,7 @@ var calc_creep_need = function (room_key) {
 }
 
 var update_model = function() {
+
     for (var key in Game.rooms) {
 
         // only once
@@ -143,11 +144,16 @@ if (Game.time - Memory.registry.sleep >= 10){
 
 }
 //per room per tick activities
-for (var key in Memory.rooms) {
-    if (Game.rooms[key] && Memory.rooms[key].has_spawn) {
-        var tower = Game.getObjectById(Memory.rooms[key].tower)
-        if (tower) {
-            tower.repair(Game.getObjectById(Memory.rooms[key].needsRepair))
+for (var key in Game.rooms) {
+    if (Memory.rooms[key] && Memory.rooms[key].tower) {
+        for (var tower_key in Memory.rooms[key].tower) {
+            var tower = Game.getObjectById(Memory.rooms[key].tower[tower_key])
+            var target = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+            if (target) {
+                tower.attack(target)
+            } else {
+                tower.repair(Game.getObjectById(Memory.rooms[key].needsRepair))
+            }
         }
     }
 }
