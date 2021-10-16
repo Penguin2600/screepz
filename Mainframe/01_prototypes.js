@@ -149,8 +149,11 @@ Creep.prototype.upgrade = function(object) {
 Creep.prototype.deposit = function(object) {
     var result = -1
     if (this.pos.isNearTo(object)) {
-        this.transferEnergy(object)
-        if (this.carry.energy == 0) this.has_load(false);
+    // transfer all resources
+    for(const resourceType in this.carry) {
+        this.transfer(object, resourceType);
+    }       
+ if (this.carry.energy == 0) this.has_load(false);
     }
     return result
 }
